@@ -1,0 +1,53 @@
+.loading-container {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  padding: 40px 60px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header góc trái */
+.loading-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.loading-title {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* --- PHẦN CĂN GIỮA CHÍNH --- */
+.loading-content {
+  flex: 1; /* chiếm phần còn lại của màn hình */
+  display: flex;
+  align-items: center;     /* căn giữa theo chiều dọc */
+  justify-content: center; /* căn giữa theo chiều ngang */
+  gap: 60px;               /* khoảng cách giữa ảnh và chữ */
+}
+
+.loading-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 20px;
+  object-fit: cover;
+  background: white;
+}
+
+.loading-text {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.35;
+}
