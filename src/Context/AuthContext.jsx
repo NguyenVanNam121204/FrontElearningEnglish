@@ -71,13 +71,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ===== LOGOUT =====
-  const logout = (navigate) => {
-    tokenStorage.clear();
-    setUser(null);
-    setRoles([]);
-    setIsAuthenticated(false);
-    setIsGuest(true);
-    navigate("/login");
+  const logout = async (navigate) => {
+    try {
+      const rt = tokenStorage.getRefreshToken();
+      if (rt) {
+        await authService.logout(rt);
+      }
+    } catch (_) {
+      // ignore errors on logout
+    } finally {
+      tokenStorage.clear();
+      setUser(null);
+      setRoles([]);
+      setIsAuthenticated(false);
+      setIsGuest(true);
+      navigate("/login");
+    }
   };
 
   return (

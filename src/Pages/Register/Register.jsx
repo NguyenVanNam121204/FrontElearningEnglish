@@ -37,55 +37,76 @@ export default function Register() {
     return age;
   };
 
-  const handleRegister = async () => {
-    setError("");
-    
-    // Validation
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !phoneNumber) {
-      setError("Vui lòng điền đầy đủ thông tin");
-      return;
+const handleRegister = async () => {
+  setError("");
+
+  // Validation
+  if (!firstName || !lastName || !email || !password || !confirmPassword || !phoneNumber) {
+    setError("Vui lòng điền đầy đủ thông tin");
+    return;
+  }
+
+  // Validate phone number (Vietnam: 10 digits, starts with 0)
+  const phoneRegex = /^0[0-9]{9}$/;
+  if (!phoneRegex.test(phoneNumber)) {
+    if (phoneNumber.length < 10) {
+      setError("Số điện thoại phải có đúng 10 chữ số");
+    } else if (phoneNumber.length > 10) {
+      setError("Số điện thoại không được vượt quá 10 chữ số");
+    } else if (!phoneNumber.startsWith("0")) {
+      setError("Số điện thoại phải bắt đầu bằng số 0");
+    } else {
+      setError("Số điện thoại không hợp lệ");
     }
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError("Mật khẩu xác nhận không khớp");
+    return;
+  }
 
-    const age = calculateAge(day, month, year);
-    if (age === null) {
-      setError("Vui lòng chọn đầy đủ ngày sinh");
-      return;
-    }
+  const age = calculateAge(day, month, year);
+  if (age === null) {
+    setError("Vui lòng chọn đầy đủ ngày sinh");
+    return;
+  }
 
-    if (age < 5) {
-      setError("Ứng dụng dành cho trẻ từ 5 tuổi trở lên");
-      return;
-    }
+  if (age < 5) {
+    setError("Ứng dụng dành cho trẻ từ 5 tuổi trở lên");
+    return;
+  }
 
-    // Call API
-    setLoading(true);
-    try {
-      const dateOfBirth = new Date(year, month - 1, day);
-      const isMale = gender === "male";
+  // Call API Register
+  setLoading(true);
+  try {
+    const dateOfBirth = new Date(year, month - 1, day);
+    const isMale = gender === "male";
 
-      await authService.register({
-        firstName,
-        lastName,
-        email,
-        password,
-        phoneNumber,
-        dateOfBirth,
-        isMale,
-      });
+    await authService.register({
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      dateOfBirth,
+      isMale,
+    });
 
-      alert("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.");
-      navigate("/login");
-    } catch (err) {
-      setError(err.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 🎉 CHUYỂN ĐÚNG ROUTE OTP
+    alert("Đăng ký thành công! Mã OTP đã được gửi tới email của bạn.");
+
+    navigate("/otp", {
+      state: { email }, // truyền email sang OTP
+    });
+
+  } catch (err) {
+    setError(err.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="auth-container">

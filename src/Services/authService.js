@@ -15,4 +15,18 @@ export const authService = {
 
   facebookLogin: (data) =>
     axiosClient.post("/auth/facebook-login", data),
+  
+  verifyEmail: (data) =>
+    axiosClient.post("/auth/verify-email", data),
+
+   forgotPassword: (data) =>
+    axiosClient.post("/auth/forgot-password", data),
+
+   verifyResetOtp: (data) =>
+    axiosClient.post("/auth/verify-otp", data),
+
+   resetPassword: (data) =>
+    axiosClient.post("/auth/set-new-password", data),
+
+
 };

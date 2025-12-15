@@ -55,18 +55,19 @@ axiosClient.interceptors.response.use(
 
       try {
         const refreshToken = tokenStorage.getRefreshToken();
-        if (!refreshToken) throw error;
+        const expiredAccessToken = tokenStorage.getAccessToken();
+        if (!refreshToken || !expiredAccessToken) throw error;
 
+        // Call refresh API with both refreshToken and current (expired) accessToken
         const res = await axios.post(
           "http://localhost:5029/api/auth/refresh-token",
-          { refreshToken }
+          { refreshToken, accessToken: expiredAccessToken }
         );
 
-        const { accessToken, refreshToken: newRefresh } = res.data;
-        tokenStorage.setTokens({
-          accessToken,
-          refreshToken: newRefresh,
-        });
+        // Backend wraps data in ServiceResponse<T>
+        const { accessToken, refreshToken: newRefresh } = res?.data?.data || {};
+        if (!accessToken || !newRefresh) throw error;
+        tokenStorage.setTokens({ accessToken, refreshToken: newRefresh });
 
         axiosClient.defaults.headers.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);

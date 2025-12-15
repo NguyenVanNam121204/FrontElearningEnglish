@@ -18,7 +18,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Vui lòng nhập email và mật khẩu");
       return;
@@ -28,7 +28,10 @@ export default function Login() {
     try {
       await login({ email, password }, navigate);
     } catch (err) {
-      setError(err.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      setError(
+        err.response?.data?.message ||
+          "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+      );
     } finally {
       setLoading(false);
     }
@@ -44,9 +47,7 @@ export default function Login() {
 
       <div className="auth-card">
         <h1 className="auth-title">Chào mừng trở lại!</h1>
-        <p className="auth-subtitle">
-          Đăng nhập để tiếp tục hành trình của bạn.
-        </p>
+        <p className="auth-subtitle">Đăng nhập để tiếp tục hành trình của bạn.</p>
 
         {/* Error message */}
         {error && (
@@ -55,7 +56,7 @@ export default function Login() {
           </div>
         )}
 
-        {/* Email (BỌC WRAPPER để bằng password) */}
+        {/* Email */}
         <div className="password-wrapper">
           <input
             type="email"
@@ -90,25 +91,30 @@ export default function Login() {
           <label>
             <input type="checkbox" /> Remember me
           </label>
-          <span className="auth-link">Quên mật khẩu?</span>
+
+          {/* 🔥 FIXED: Thêm onClick navigate */}
+          <span
+            className="auth-link"
+            onClick={() => navigate("/forgot-password")}
+            style={{ cursor: "pointer" }}
+          >
+            Quên mật khẩu?
+          </span>
         </div>
 
         {/* Login button */}
-        <button 
-          className="auth-btn primary" 
+        <button
+          className="auth-btn primary"
           onClick={handleLogin}
           disabled={loading}
         >
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 
-        {/* Register link */}
+        {/* Register */}
         <p className="auth-footer">
           Chưa có tài khoản?{" "}
-          <span
-            className="auth-link"
-            onClick={() => navigate("/register")}
-          >
+          <span className="auth-link" onClick={() => navigate("/register")}>
             Đăng ký
           </span>
         </p>
@@ -126,7 +132,7 @@ export default function Login() {
           <span>Đăng nhập bằng Facebook</span>
         </button>
 
-        <button 
+        <button
           className="auth-btn guest social-btn"
           onClick={handleGuestLogin}
           disabled={loading}
