@@ -1,15 +1,16 @@
 import React from "react";
 import "./Welcome.css";
+import Header from "../../Components/Header/LogoHeader";
 import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Welcome() {
+  const navigate = useNavigate();
   return (
     <div className="welcome-container">
       {/* Header */}
-      <div className="welcome-header">
-        <img src={mochiWelcome} alt="logo" className="welcome-logo" />
-        <span className="welcome-title">Catalunya English</span>
-      </div>
+      <Header />
 
       {/* Content */}
       <div className="welcome-content">
@@ -18,8 +19,8 @@ export default function Welcome() {
         <div className="welcome-right">
           <h1 className="welcome-text">Ghi nhớ 1000 từ vựng trong 1 tháng</h1>
 
-          <button className="welcome-btn">Đăng nhập</button>
-          <button className="welcome-btn">Đăng ký</button>
+          <button className="welcome-btn" onClick={() => navigate("/login")}>Đăng nhập</button>
+          <button className="welcome-btn" onClick={() => navigate("/register")}>Đăng ký</button>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Loading.css";
+import Header from "../../Components/Header/LogoHeader";
 import mochiLoading from "../../Assets/Logo/mochi-loading.jpg";
-import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
 
 export default function Loading() {
   const navigate = useNavigate();
@@ -18,10 +18,7 @@ export default function Loading() {
   return (
     <div className="loading-container">
       {/* Header */}
-      <div className="loading-header">
-        <img src={mochiWelcome} alt="logo" className="loading-logo" />
-        <span className="loading-title">Catalunya English</span>
-      </div>
+      <Header />
 
       {/* Nội dung trung tâm */}
       <div className="loading-content">

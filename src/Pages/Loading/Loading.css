@@ -8,26 +8,6 @@
   flex-direction: column;
 }
 
-/* Header góc trái */
-.loading-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.loading-logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.loading-title {
-  color: white;
-  font-size: 20px;
-  font-weight: 600;
-}
-
 /* --- PHẦN CĂN GIỮA CHÍNH --- */
 .loading-content {
   flex: 1;
