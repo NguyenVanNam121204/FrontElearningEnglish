@@ -63,6 +63,50 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // ===== GOOGLE LOGIN =====
+  const googleLogin = (data, navigate) => {
+    return authService.googleLogin(data).then((res) => {
+      const { accessToken, refreshToken, user } = res.data.data;
+
+      user.fullName = user.displayName || user.fullName || `${user.firstName} ${user.lastName}`.trim();
+      user.avatarUrl = user.avatarUrl || null;
+
+      tokenStorage.setTokens({ accessToken, refreshToken });
+      setUser(user);
+      setRoles(user.roles?.map((r) => r.name) || []);
+      setIsAuthenticated(true);
+      setIsGuest(false);
+
+      if (user.roles?.some((r) => r.name === "Admin")) {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
+    });
+  };
+
+  // ===== FACEBOOK LOGIN =====
+  const facebookLogin = (data, navigate) => {
+    return authService.facebookLogin(data).then((res) => {
+      const { accessToken, refreshToken, user } = res.data.data;
+
+      user.fullName = user.displayName || user.fullName || `${user.firstName} ${user.lastName}`.trim();
+      user.avatarUrl = user.avatarUrl || null;
+
+      tokenStorage.setTokens({ accessToken, refreshToken });
+      setUser(user);
+      setRoles(user.roles?.map((r) => r.name) || []);
+      setIsAuthenticated(true);
+      setIsGuest(false);
+
+      if (user.roles?.some((r) => r.name === "Admin")) {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
+    });
+  };
+
   // ===== GUEST =====
   const loginAsGuest = (navigate) => {
     tokenStorage.clear();
@@ -115,6 +159,8 @@ export const AuthProvider = ({ children }) => {
         isGuest,
         loading,
         login,
+        googleLogin,
+        facebookLogin,
         loginAsGuest,
         logout,
         refreshUser,
