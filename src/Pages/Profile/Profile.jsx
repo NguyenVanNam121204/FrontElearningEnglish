@@ -126,8 +126,8 @@ export default function Profile() {
             <MainHeader />
             <div className="profile-container">
                 <div className="profile-header">
-                    <button className="back-button" onClick={() => navigate(-1)}>
-                        <FaArrowLeft /> Quay lại
+                    <button className="back-button" onClick={() => navigate("/home")}>
+                        <FaArrowLeft /> Quay về trang chủ
                     </button>
                     <h1>Thông tin User</h1>
                 </div>

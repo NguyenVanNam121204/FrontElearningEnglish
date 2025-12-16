@@ -13,6 +13,7 @@ import ForgotPassword from "./Pages/ForgotPassword/ForgotPassword";
 import OtpResetPassword from "./Pages/OtpResetPassword/OtpResetPassword";
 import ResetPassword from "./Pages/ResetPassword/ResetPassword";
 import Payment from "./Pages/Payment/Payment";
+import VocabularyReview from "./Pages/VocabularyReview/VocabularyReview";
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="/reset-otp" element={<OtpResetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/vocabulary-review" element={<VocabularyReview />} />
       </Routes>
     </BrowserRouter>
   );

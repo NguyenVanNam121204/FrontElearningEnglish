@@ -200,9 +200,9 @@ export default function ChangePassword() {
                 confirmPassword: "",
             });
 
-            // Navigate back after 2 seconds
+            // Navigate back to home after 2 seconds
             setTimeout(() => {
-                navigate("/profile");
+                navigate("/home");
             }, 2000);
         } catch (error) {
             setError(
@@ -214,7 +214,7 @@ export default function ChangePassword() {
     };
 
     const handleCancel = () => {
-        navigate("/profile");
+        navigate("/home");
     };
 
     return (

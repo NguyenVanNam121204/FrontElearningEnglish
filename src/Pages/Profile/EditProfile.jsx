@@ -10,6 +10,7 @@ export default function EditProfile() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
 
     const [formData, setFormData] = useState({
         lastName: "",
@@ -52,6 +53,7 @@ export default function EditProfile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setSuccess(false);
         setLoading(true);
 
         try {
@@ -60,8 +62,8 @@ export default function EditProfile() {
             const updatedUser = response.data.data;
             updatedUser.fullName = updatedUser.displayName || updatedUser.fullName || `${updatedUser.firstName} ${updatedUser.lastName}`.trim();
 
-            // Navigate back to profile
-            navigate("/profile");
+            // Show success message and stay on the page
+            setSuccess(true);
         } catch (error) {
             setError(
                 error.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin"
@@ -89,6 +91,7 @@ export default function EditProfile() {
                     <h1>Thay đổi thông tin</h1>
 
                     {error && <div className="error-message">{error}</div>}
+                    {success && <div className="success-message">Lưu thông tin thành công!</div>}
 
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
@@ -170,7 +173,7 @@ export default function EditProfile() {
                                 className="btn-submit"
                                 disabled={loading}
                             >
-                                {loading ? "Đang lưu..." : "Thay đổi thông tin"}
+                                {loading ? "Đang lưu..." : "Lưu thông tin"}
                             </button>
                         </div>
                     </form>

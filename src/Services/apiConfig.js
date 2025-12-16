@@ -88,6 +88,9 @@ export const API_ENDPOINTS = {
     },
     // Flashcard Review
     FLASHCARD_REVIEW: {
+        GET_DUE: "/user/flashcard-review/due",
+        REVIEW: "/user/flashcard-review/review",
+        STATISTICS: "/user/flashcard-review/statistics",
         GET_REVIEW_LIST: "/user/flashcard-review/review-list",
         UPDATE_REVIEW: "/user/flashcard-review/update-review",
     },
