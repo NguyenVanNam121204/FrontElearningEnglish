@@ -29,6 +29,7 @@ export default function Login() {
     guest: false,
   });
 
+
   // Validate email format
   const validateEmail = (email) => {
     if (!email) {
@@ -36,7 +37,7 @@ export default function Login() {
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return "Email không hợp lệ";
+      return "Email không hợp lệ, email phải có định dạng example@example.com";
     }
     return "";
   };
@@ -112,22 +113,31 @@ export default function Login() {
     setGeneralError("");
 
     try {
-      // Use Google Identity Services if available
+      // Use default client ID if env variable is not set
+      const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+        "872783330590-gc3t4a8rf2dve8s87qu2dte766k6f44p.apps.googleusercontent.com";
+
+      if (!googleClientId) {
+        setGeneralError(
+          "Google Login chưa được cấu hình. Vui lòng liên hệ quản trị viên."
+        );
+        setSocialLoading((prev) => ({ ...prev, google: false }));
+        return;
+      }
+
+      // Use Google Identity Services with button flow
       if (window.google && window.google.accounts) {
-        const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-        if (!googleClientId) {
-          setGeneralError(
-            "Google Login chưa được cấu hình. Vui lòng liên hệ quản trị viên."
-          );
-          setSocialLoading((prev) => ({ ...prev, google: false }));
-          return;
-        }
+        // Create a hidden button and trigger it
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'none';
+        document.body.appendChild(buttonContainer);
 
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: async (response) => {
             try {
               const state = Math.random().toString(36).substring(2, 15);
+              document.body.removeChild(buttonContainer);
               await googleLogin(
                 {
                   idToken: response.credential,
@@ -136,6 +146,7 @@ export default function Login() {
                 navigate
               );
             } catch (err) {
+              document.body.removeChild(buttonContainer);
               setGeneralError(
                 err.response?.data?.message ||
                 "Đăng nhập bằng Google thất bại. Vui lòng thử lại."
@@ -145,10 +156,27 @@ export default function Login() {
           },
         });
 
-        window.google.accounts.id.prompt();
+        // Render button and click it programmatically
+        window.google.accounts.id.renderButton(buttonContainer, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+        });
+
+        // Trigger click after a short delay to ensure button is rendered
+        setTimeout(() => {
+          const button = buttonContainer.querySelector('div[role="button"]');
+          if (button) {
+            button.click();
+          } else {
+            document.body.removeChild(buttonContainer);
+            setGeneralError("Không thể khởi tạo đăng nhập Google. Vui lòng thử lại.");
+            setSocialLoading((prev) => ({ ...prev, google: false }));
+          }
+        }, 100);
       } else {
         setGeneralError(
-          "Google Identity Services chưa được tải. Vui lòng làm mới trang và thử lại."
+          "Đang tải Google Identity Services... Vui lòng đợi vài giây rồi thử lại."
         );
         setSocialLoading((prev) => ({ ...prev, google: false }));
       }
@@ -164,6 +192,17 @@ export default function Login() {
     setGeneralError("");
 
     try {
+      // Use default app ID if env variable is not set
+      const facebookAppId = process.env.REACT_APP_FACEBOOK_APP_ID || "1387702409762481";
+
+      if (!facebookAppId) {
+        setGeneralError(
+          "Facebook Login chưa được cấu hình. Vui lòng liên hệ quản trị viên."
+        );
+        setSocialLoading((prev) => ({ ...prev, facebook: false }));
+        return;
+      }
+
       // Check if Facebook SDK is loaded
       if (window.FB) {
         window.FB.login(
@@ -194,7 +233,7 @@ export default function Login() {
         );
       } else {
         setGeneralError(
-          "Facebook SDK chưa được tải. Vui lòng làm mới trang và thử lại."
+          "Đang tải Facebook SDK... Vui lòng đợi vài giây rồi thử lại."
         );
         setSocialLoading((prev) => ({ ...prev, facebook: false }));
       }
