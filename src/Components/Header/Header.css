@@ -1,0 +1,191 @@
+/* =========================================================
+   MAIN HEADER
+========================================================= */
+.main-header {
+  height: 70px;
+  padding: 0 28px;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  color: #fff;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+
+/* =========================================================
+   LEFT: Logo + Brand
+========================================================= */
+.main-header__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.main-header__logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.main-header__brand {
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   CENTER NAV
+========================================================= */
+.main-header__nav {
+  display: flex;
+  justify-content: center;
+  gap: 52px;  /* khoảng cách giữa các menu */
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.9;
+  padding: 10px 18px;
+  border-radius: 12px;
+  transition: 0.22s ease;
+}
+
+.nav-item:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.nav-item svg {
+  font-size: 16px;
+}
+
+/* ACTIVE (giống thiết kế mockup) */
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.32);
+  opacity: 1;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* =========================================================
+   RIGHT: streak + profile
+========================================================= */
+.main-header__right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.streak-badge {
+  background: #ffe089;
+  color: #4d3b00;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* =========================================================
+   PROFILE DROPDOWN
+========================================================= */
+
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  background: #fff;
+  color: #d447b6;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  font-size: 13px;
+}
+
+.user-info .name {
+  font-weight: 600;
+}
+
+.user-info .role {
+  opacity: 0.9;
+}
+
+/* DROPDOWN PANEL */
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  width: 240px;
+  background: #c85bb4;
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+  z-index: 999;
+  animation: fadeDown 0.18s ease;
+}
+
+.profile-dropdown button {
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.profile-dropdown .teacher {
+  font-weight: 600;
+}
+
+.profile-dropdown .logout {
+  color: #ffe0e0;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.35);
+  margin: 8px 0;
+}
+
+/* Animation */
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
