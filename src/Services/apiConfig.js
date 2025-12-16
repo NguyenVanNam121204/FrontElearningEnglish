@@ -123,7 +123,7 @@ export const API_ENDPOINTS = {
     },
     // Streaks
     STREAKS: {
-        GET_MY_STREAK: "/user/streaks/my-streak",
+        GET_MY_STREAK: "/user/streaks",
     },
 };
 
