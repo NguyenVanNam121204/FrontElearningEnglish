@@ -187,12 +187,30 @@ export const AuthProvider = ({ children }) => {
 
   // ===== GUEST =====
   const loginAsGuest = useCallback((navigate) => {
-    tokenStorage.clear();
-    setUser(null);
-    setRoles([]);
-    setIsAuthenticated(false);
-    setIsGuest(true);
-    navigate("/home");
+    try {
+      console.log("=== LOGIN AS GUEST START ===");
+      
+      // Clear all tokens and user data
+      tokenStorage.clear();
+      console.log("Tokens cleared");
+      
+      // Reset all auth state
+      setUser(null);
+      setRoles([]);
+      setIsAuthenticated(false);
+      setIsGuest(true);
+      console.log("Auth state reset - isGuest: true");
+      
+      // Navigate to home
+      console.log("Navigating to /home...");
+      navigate("/home");
+      console.log("=== LOGIN AS GUEST SUCCESS ===");
+    } catch (error) {
+      console.error("=== LOGIN AS GUEST ERROR ===");
+      console.error("Error:", error);
+      // Still try to navigate even if there's an error
+      navigate("/home");
+    }
   }, []);
 
   // ===== LOGOUT =====

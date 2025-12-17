@@ -186,17 +186,7 @@ export default function EditProfile() {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="bio">Tiểu sử:</label>
-                            <textarea
-                                id="bio"
-                                name="bio"
-                                value={formData.bio}
-                                onChange={handleChange}
-                                placeholder="Nhập tiểu sử của bạn"
-                                rows="4"
-                            />
-                        </div>
+                        
 
                         <div className="form-actions">
                             <button

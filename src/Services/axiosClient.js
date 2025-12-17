@@ -76,11 +76,35 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (err) {
         processQueue(err, null);
+        const hadTokens = tokenStorage.getAccessToken() || tokenStorage.getRefreshToken();
         tokenStorage.clear();
-        window.location.href = "/login";
+        
+        // Only redirect to login if we actually had tokens (not a guest user)
+        // Guest users should be allowed to stay on the page
+        if (hadTokens) {
+          // Only redirect if we're not already on a public page
+          const currentPath = window.location.pathname;
+          const publicPaths = ['/welcome', '/login', '/register', '/home'];
+          if (!publicPaths.includes(currentPath)) {
+            window.location.href = "/login";
+          }
+        }
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    // For 401 errors that don't trigger token refresh (e.g., guest users)
+    // Don't redirect if user is on a public page or home page
+    if (error.response?.status === 401) {
+      const currentPath = window.location.pathname;
+      const allowedPaths = ['/welcome', '/login', '/register', '/home'];
+      const hasToken = tokenStorage.getAccessToken();
+      
+      // If no token and on allowed path, don't redirect (guest user)
+      if (!hasToken && allowedPaths.includes(currentPath)) {
+        return Promise.reject(error);
       }
     }
 

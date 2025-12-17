@@ -5,6 +5,7 @@ import "./Header.css";
 import logo from "../../Assets/Logo/mochi-welcome.jpg";
 import ProfileDropdown from "./ProfileDropdown";
 import { streakService } from "../../Services/streakService";
+import { useAuth } from "../../Context/AuthContext";
 
 // Import icons from Assets/Icons (SVG)
 import iconHome from "../../Assets/Icons/icon_home.svg";
@@ -18,8 +19,15 @@ export default function MainHeader() {
   const [streakDays, setStreakDays] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
 
   useEffect(() => {
+    // Only fetch streak if user is authenticated (not guest)
+    if (isGuest) {
+      setStreakDays(0);
+      return;
+    }
+
     const fetchStreak = async () => {
       try {
         const response = await streakService.getMyStreak();
@@ -32,7 +40,7 @@ export default function MainHeader() {
     };
 
     fetchStreak();
-  }, []);
+  }, [isGuest]);
 
   const isActive = (path) => {
     return location.pathname === path;

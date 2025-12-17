@@ -186,11 +186,6 @@ export default function Profile() {
                             <label>Số điện thoại:</label>
                             <div className="info-value">{user.phoneNumber || "-"}</div>
                         </div>
-
-                        <div className="info-row">
-                            <label>Tiểu sử:</label>
-                            <div className="info-value">{user.bio || "-"}</div>
-                        </div>
                     </div>
 
                     {/* Action Buttons */}
