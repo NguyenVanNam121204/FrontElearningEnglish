@@ -26,15 +26,13 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Facebook SDK -->
+  <!-- Note: Facebook SDK initialization is handled in useFacebookLogin hook -->
+  <!-- This ensures App ID comes from environment variables for security -->
   <script>
     window.fbAsyncInit = function () {
-      FB.init({
-        appId: '1387702409762481',
-        cookie: true,
-        xfbml: true,
-        version: 'v18.0'
-      });
-      FB.AppEvents.logPageView();
+      // Facebook SDK will be initialized by useFacebookLogin hook
+      // This prevents hardcoding App ID in HTML
+      // The hook will use REACT_APP_FACEBOOK_APP_ID from .env file
     };
     (function (d, s, id) {
       var js, fjs = d.getElementsByTagName(s)[0];

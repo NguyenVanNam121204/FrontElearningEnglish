@@ -3,8 +3,10 @@
  * Tất cả các endpoint API được định nghĩa tại đây
  */
 
+// Get API configuration from environment variables
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5029/api";
-const AUTH_REFRESH_URL = process.env.REACT_APP_AUTH_REFRESH_URL || "http://localhost:5029/api/auth/refresh-token";
+const AUTH_REFRESH_URL = process.env.REACT_APP_AUTH_REFRESH_URL || `${API_BASE_URL}/auth/refresh-token`;
+
 
 // Auth endpoints
 export const API_ENDPOINTS = {
