@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { authService } from "../Services/authService";
 import { tokenStorage } from "../Utils/tokenStorage";
 
@@ -41,9 +41,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // ===== LOGIN =====
-  const login = (data, navigate) => {
-    return authService.login(data).then((res) => {
+  const login = useCallback(async (data, navigate) => {
+    try {
+      const res = await authService.login(data);
+      
+      if (!res.data?.success || !res.data?.data) {
+        throw new Error(res.data?.message || "Đăng nhập thất bại");
+      }
+
       const { accessToken, refreshToken, user } = res.data.data;
+
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Dữ liệu đăng nhập không hợp lệ");
+      }
 
       // Parse user data
       user.fullName = user.displayName || user.fullName || `${user.firstName} ${user.lastName}`.trim();
@@ -60,13 +70,26 @@ export const AuthProvider = ({ children }) => {
       } else {
         navigate("/home");
       }
-    });
-  };
+    } catch (error) {
+      throw error; // Re-throw để component có thể catch
+    }
+  }, []);
 
   // ===== GOOGLE LOGIN =====
-  const googleLogin = (data, navigate) => {
-    return authService.googleLogin(data).then((res) => {
+  const googleLogin = useCallback(async (data, navigate) => {
+    try {
+      const res = await authService.googleLogin(data);
+      
+      // Backend returns: { success, statusCode, message, data: { accessToken, refreshToken, user, expiresAt } }
+      if (!res.data?.success || !res.data?.data) {
+        throw new Error(res.data?.message || "Đăng nhập bằng Google thất bại");
+      }
+
       const { accessToken, refreshToken, user } = res.data.data;
+
+      if (!accessToken || !refreshToken || !user) {
+        throw new Error("Dữ liệu đăng nhập không hợp lệ");
+      }
 
       user.fullName = user.displayName || user.fullName || `${user.firstName} ${user.lastName}`.trim();
       user.avatarUrl = user.avatarUrl || null;
@@ -82,43 +105,98 @@ export const AuthProvider = ({ children }) => {
       } else {
         navigate("/home");
       }
-    });
-  };
+    } catch (error) {
+      throw error; // Re-throw để component có thể catch
+    }
+  }, []);
 
   // ===== FACEBOOK LOGIN =====
-  const facebookLogin = (data, navigate) => {
-    return authService.facebookLogin(data).then((res) => {
+  const facebookLogin = useCallback(async (data, navigate) => {
+    try {
+      // Log to terminal (console.log outputs to terminal in Node.js/React)
+      console.log("=== AuthContext.facebookLogin START ===");
+      console.log("Received data:", JSON.stringify({ ...data, AccessToken: data?.AccessToken ? "***" : undefined }, null, 2));
+      
+      console.log("Calling authService.facebookLogin...");
+      const res = await authService.facebookLogin(data);
+      console.log("Backend response received");
+      console.log("Response status:", res.status);
+      console.log("Response statusText:", res.statusText);
+      console.log("Response data:", JSON.stringify(res.data, null, 2));
+      
+      // Backend returns: { success, statusCode, message, data: { accessToken, refreshToken, user, expiresAt } }
+      if (!res.data?.success || !res.data?.data) {
+        console.error("Backend returned error response");
+        console.error("Success:", res.data?.success);
+        console.error("StatusCode:", res.data?.statusCode);
+        console.error("Message:", res.data?.message);
+        console.error("Data:", JSON.stringify(res.data?.data, null, 2));
+        throw new Error(res.data?.message || "Đăng nhập bằng Facebook thất bại");
+      }
+
       const { accessToken, refreshToken, user } = res.data.data;
+      console.log("Extracted data from response");
+      console.log("Has accessToken:", !!accessToken);
+      console.log("Has refreshToken:", !!refreshToken);
+      console.log("Has user:", !!user);
+      console.log("User data:", JSON.stringify(user ? { 
+        userId: user.userId, 
+        email: user.email, 
+        fullName: user.fullName || user.displayName,
+        hasRoles: !!user.roles 
+      } : null, null, 2));
+
+      if (!accessToken || !refreshToken || !user) {
+        console.error("Missing required data in response");
+        throw new Error("Dữ liệu đăng nhập không hợp lệ");
+      }
 
       user.fullName = user.displayName || user.fullName || `${user.firstName} ${user.lastName}`.trim();
       user.avatarUrl = user.avatarUrl || null;
 
+      console.log("Setting tokens and user state...");
       tokenStorage.setTokens({ accessToken, refreshToken });
       setUser(user);
       setRoles(user.roles?.map((r) => r.name) || []);
       setIsAuthenticated(true);
       setIsGuest(false);
 
+      console.log("Navigating to home/admin...");
       if (user.roles?.some((r) => r.name === "Admin")) {
         navigate("/admin");
       } else {
         navigate("/home");
       }
-    });
-  };
+      console.log("=== AuthContext.facebookLogin SUCCESS ===");
+    } catch (error) {
+      console.error("=== AuthContext.facebookLogin ERROR ===");
+      console.error("Error object:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error message:", error.message);
+      console.error("Error name:", error.name);
+      console.error("Error stack:", error.stack);
+      
+      if (error.response) {
+        console.error("Error response status:", error.response.status);
+        console.error("Error response data:", JSON.stringify(error.response.data, null, 2));
+      }
+      
+      throw error; // Re-throw để component có thể catch
+    }
+  }, []);
 
   // ===== GUEST =====
-  const loginAsGuest = (navigate) => {
+  const loginAsGuest = useCallback((navigate) => {
     tokenStorage.clear();
     setUser(null);
     setRoles([]);
     setIsAuthenticated(false);
     setIsGuest(true);
     navigate("/home");
-  };
+  }, []);
 
   // ===== LOGOUT =====
-  const logout = async (navigate) => {
+  const logout = useCallback(async (navigate) => {
     try {
       const rt = tokenStorage.getRefreshToken();
       if (rt) {
@@ -134,10 +212,10 @@ export const AuthProvider = ({ children }) => {
       setIsGuest(true);
       navigate("/login");
     }
-  };
+  }, []);
 
   // ===== REFRESH USER =====
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const response = await authService.getProfile();
       const userData = response.data.data;
@@ -148,7 +226,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error refreshing user:", error);
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
