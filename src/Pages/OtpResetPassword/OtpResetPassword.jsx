@@ -15,37 +15,91 @@ export default function OtpResetPassword() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [maxAttemptsReached, setMaxAttemptsReached] = useState(false);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
   const handleChange = (e, index) => {
-    const digit = e.target.value.replace(/\D/g, "").slice(-1);
+    const value = e.target.value;
+
+    // Chỉ cho phép số
+    const numericValue = value.replace(/\D/g, "");
+
+    // Nếu không có gì hoặc xóa
+    if (numericValue === "") {
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+      // Không xóa error message ngay, để người dùng thấy số lần thử còn lại
+      return;
+    }
+
+    // Lấy ký tự cuối cùng (trường hợp paste nhiều số)
+    const digit = numericValue.slice(-1);
 
     const newOtp = [...otp];
     newOtp[index] = digit;
     setOtp(newOtp);
+    
+    // Chỉ xóa error message khi người dùng đã nhập đủ 6 số (sẵn sàng verify lại)
+    // Không xóa ngay khi bắt đầu nhập để giữ message từ backend
+    const fullCode = newOtp.join("");
+    if (fullCode.length === 6) {
+      // Khi đã nhập đủ 6 số, xóa error để chuẩn bị cho lần verify mới
+      setErrorMessage("");
+    }
 
+    // Auto focus sang ô tiếp theo
     if (digit && index < 5) {
-      setTimeout(() => inputRefs.current[index + 1]?.focus(), 10);
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 0);
     }
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
+    // Backspace: nếu ô trống thì quay về ô trước
+    if (e.key === "Backspace") {
+      if (!otp[index] && index > 0) {
+        const newOtp = [...otp];
+        newOtp[index - 1] = "";
+        setOtp(newOtp);
+        inputRefs.current[index - 1]?.focus();
+      }
+    }
+
+    // Arrow left
+    if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    }
+
+    // Arrow right
+    if (e.key === "ArrowRight" && index < 5) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
 
-    if (pasted.length === 6) {
-      setOtp(pasted.split(""));
+    if (pastedData.length === 6) {
+      setOtp(pastedData.split(""));
       inputRefs.current[5]?.focus();
+      // Xóa error message khi paste đủ 6 số để chuẩn bị verify
+      setErrorMessage("");
     }
+  };
+
+  const clearOtp = () => {
+    setOtp(["", "", "", "", "", ""]);
+    setErrorMessage("");
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
   };
 
   const handleVerify = async () => {
@@ -56,46 +110,92 @@ export default function OtpResetPassword() {
       return;
     }
 
+    setLoading(true);
+    setErrorMessage("");
+
     try {
-      // 🔥 API verify OTP cho QUÊN MẬT KHẨU
       const res = await authService.verifyResetOtp({
         email,
         otpCode: code,
       });
 
       if (res.data?.success) {
+        // Xác thực thành công
         navigate("/reset-password", { state: { email, otpCode: code } });
       } else {
-        const errorMsg = res.data?.message || "Mã OTP không hợp lệ.";
-        setErrorMessage(errorMsg);
-        
-        // Xóa hết OTP để nhập lại
-        setOtp(["", "", "", "", "", ""]);
-        setTimeout(() => inputRefs.current[0]?.focus(), 100);
+        // Xác thực thất bại - Backend sẽ trả về message nếu quá số lần thử
+        const errorMsg = res.data?.message || "Mã OTP không đúng hoặc đã hết hạn.";
+        clearOtp(); // Xóa các số khi nhập sai
 
-        // Kiểm tra hết lần thử → quay về forgot-password
-        if (errorMsg.includes("quá") || errorMsg.includes("5 lần")) {
+        // Kiểm tra chính xác message về giới hạn số lần thử
+        // Backend trả về: "Bạn đã nhập sai OTP quá 5 lần. Vui lòng yêu cầu mã OTP mới"
+        // Chỉ bắt khi có từ "quá" và "lần" cùng nhau (không phải "lần thử" trong "Còn X lần thử")
+        const isMaxAttemptsReached = errorMsg.includes("quá") && errorMsg.includes("lần") && 
+                                     (errorMsg.includes("5 lần") || errorMsg.includes("quá 5"));
+        
+        if (isMaxAttemptsReached) {
+          setMaxAttemptsReached(true);
+          setErrorMessage("Bạn đã nhập sai quá 5 lần. Vui lòng yêu cầu mã OTP mới.");
           setTimeout(() => {
-            alert("Bạn đã nhập sai quá 5 lần. Vui lòng yêu cầu mã OTP mới.");
+            alert("Bạn đã nhập sai quá 5 lần. Vui lòng quay lại trang quên mật khẩu.");
             navigate("/forgot-password");
-          }, 1500);
+          }, 2000);
+        } else {
+          setErrorMessage(errorMsg);
         }
       }
     } catch (err) {
-      const msg = err.response?.data?.message || "Mã OTP không hợp lệ.";
-      setErrorMessage(msg);
-      
-      // Xóa hết OTP để nhập lại
-      setOtp(["", "", "", "", "", ""]);
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      clearOtp(); // Xóa các số khi nhập sai
 
-      // Kiểm tra hết lần thử → quay về forgot-password
-      if (msg.includes("quá") || msg.includes("5 lần")) {
+      const msg = err.response?.data?.message || "Mã OTP không đúng hoặc đã hết hạn.";
+
+      // Kiểm tra chính xác message về giới hạn số lần thử
+      // Backend trả về: "Bạn đã nhập sai OTP quá 5 lần. Vui lòng yêu cầu mã OTP mới"
+      // Chỉ bắt khi có từ "quá" và "lần" cùng nhau (không phải "lần thử" trong "Còn X lần thử")
+      const isMaxAttemptsReached = msg.includes("quá") && msg.includes("lần") && 
+                                   (msg.includes("5 lần") || msg.includes("quá 5"));
+      
+      if (isMaxAttemptsReached) {
+        setMaxAttemptsReached(true);
+        setErrorMessage("Bạn đã nhập sai quá 5 lần. Vui lòng yêu cầu mã OTP mới.");
         setTimeout(() => {
-          alert("Bạn đã nhập sai quá 5 lần. Vui lòng yêu cầu mã OTP mới.");
+          alert("Bạn đã nhập sai quá 5 lần. Vui lòng quay lại trang quên mật khẩu.");
           navigate("/forgot-password");
-        }, 1500);
+        }, 2000);
+      } else {
+        setErrorMessage(msg);
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email) {
+      setErrorMessage("Email không hợp lệ. Vui lòng quay lại trang quên mật khẩu.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+    setMaxAttemptsReached(false); // Reset trạng thái khi gửi lại OTP
+
+    try {
+      // Gọi lại API forgotPassword để gửi OTP mới
+      const res = await authService.forgotPassword({ email: email.trim() });
+
+      if (res.data && res.data.success === true) {
+        setErrorMessage("");
+        clearOtp();
+        alert("Mã OTP mới đã được gửi đến email của bạn!");
+      } else {
+        setErrorMessage(res.data?.message || "Không thể gửi lại mã OTP. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Không thể gửi lại mã OTP. Vui lòng thử lại.";
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,21 +215,41 @@ export default function OtpResetPassword() {
               value={digit}
               className="otp-input"
               maxLength={1}
-              type="text"
               inputMode="numeric"
+              type="text"
               onChange={(e) => handleChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               onPaste={handlePaste}
               autoComplete="off"
+              disabled={loading || maxAttemptsReached}
             />
           ))}
         </div>
 
-        {errorMessage && <p className="otp-error">{errorMessage}</p>}
+        {errorMessage && (
+          <p className={`otp-error ${maxAttemptsReached ? "otp-error-max" : ""}`}>
+            {errorMessage}
+          </p>
+        )}
 
-        <button className="otp-btn" onClick={handleVerify}>
-          Xác minh
+        <button
+          className="otp-btn"
+          onClick={handleVerify}
+          disabled={loading || maxAttemptsReached}
+        >
+          {loading ? "Đang xác minh..." : "Xác minh"}
         </button>
+
+        <div className="otp-resend">
+          <span>Chưa nhận được mã? </span>
+          <button
+            className="resend-btn"
+            onClick={handleResendOtp}
+            disabled={loading || maxAttemptsReached}
+          >
+            {loading ? "Đang gửi..." : "Gửi lại mã OTP"}
+          </button>
+        </div>
       </div>
     </div>
   );

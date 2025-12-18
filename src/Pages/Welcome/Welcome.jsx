@@ -1,28 +1,35 @@
 import React from "react";
 import "./Welcome.css";
-import Header from "../../Components/Header/LogoHeader";
+import WelcomeHero from "../../Components/Welcome/WelcomeHero";
+import WelcomeHabit from "../../Components/Welcome/WelcomeHabit";
+import WelcomeIELTS from "../../Components/Welcome/WelcomeIELTS";
+import WelcomePremium from "../../Components/Welcome/WelcomePremium";
+import WelcomeFooter from "../../Components/Welcome/WelcomeFooter";
 import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
-import { useNavigate } from "react-router-dom";
-
 
 export default function Welcome() {
-  const navigate = useNavigate();
   return (
-    <div className="welcome-container">
-      {/* Header */}
-      <Header />
-
-      {/* Content */}
-      <div className="welcome-content">
-        <img src={mochiWelcome} alt="welcome" className="welcome-img" />
-
-        <div className="welcome-right">
-          <h1 className="welcome-text">Ghi nhớ 1000 từ vựng trong 1 tháng</h1>
-
-          <button className="welcome-btn" onClick={() => navigate("/login")}>Đăng nhập</button>
-          <button className="welcome-btn" onClick={() => navigate("/register")}>Đăng ký</button>
-        </div>
+    <div className="welcome-page">
+      {/* Logo ở góc bên trái */}
+      <div className="welcome-logo">
+        <img src={mochiWelcome} alt="Catalunya English Logo" className="welcome-logo-img" />
+        <span className="welcome-logo-text">Catalunya English</span>
       </div>
+
+      {/* Hero Section */}
+      <WelcomeHero />
+
+      {/* Habit Section */}
+      <WelcomeHabit />
+
+      {/* IELTS Section */}
+      <WelcomeIELTS />
+
+      {/* Premium Section */}
+      <WelcomePremium />
+
+      {/* Footer */}
+      <WelcomeFooter />
     </div>
   );
 }

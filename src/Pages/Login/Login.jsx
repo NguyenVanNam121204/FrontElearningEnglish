@@ -1,43 +1,149 @@
-import React, { useState } from "react";
-import "../Login/Login.css";
+import React, { useState, useEffect } from "react";
+import "./Login.css";
 import Header from "../../Components/Header/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebookF, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaFacebookF, FaUser } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext";
+import { InputField, SocialLoginButton } from "../../Components/Auth";
+import { useGoogleLogin, useFacebookLogin } from "../../hooks";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, loginAsGuest } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
+  // Use custom hooks for social login
+  const {
+    handleGoogleLogin,
+    loading: googleLoading,
+    error: googleError,
+  } = useGoogleLogin();
+  const {
+    handleFacebookLogin,
+    loading: facebookLoading,
+    error: facebookError,
+  } = useFacebookLogin();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+  const [generalError, setGeneralError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState({
+    google: false,
+    facebook: false,
+    guest: false,
+  });
+
+  // Update social loading state from hooks
+  useEffect(() => {
+    setSocialLoading((prev) => ({
+      ...prev,
+      google: googleLoading,
+      facebook: facebookLoading,
+    }));
+  }, [googleLoading, facebookLoading]);
+
+  // Update general error from hooks
+  useEffect(() => {
+    if (googleError) {
+      setGeneralError(googleError);
+    } else if (facebookError) {
+      setGeneralError(facebookError);
+    }
+  }, [googleError, facebookError]);
+
+
+  // Validate email format
+  const validateEmail = (email) => {
+    if (!email) {
+      return "Vui lòng nhập email";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Email không hợp lệ, email phải có định dạng example@example.com";
+    }
+    return "";
+  };
+
+  // Validate password
+  const validatePassword = (password) => {
+    if (!password) {
+      return "Vui lòng nhập mật khẩu";
+    }
+    if (password.length < 6) {
+      return "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+    return "";
+  };
+
+  // Handle input change with validation
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Real-time validation
+    setGeneralError("");
+    if (name === "email") {
+      setErrors((prev) => ({
+        ...prev,
+        email: validateEmail(value),
+      }));
+    } else if (name === "password") {
+      setErrors((prev) => ({
+        ...prev,
+        password: validatePassword(value),
+      }));
+    }
+  };
+
+  // Handle form submission
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setGeneralError("");
 
-    if (!email || !password) {
-      setError("Vui lòng nhập email và mật khẩu");
+    // Validate all fields
+    const emailError = validateEmail(formData.email);
+    const passwordError = validatePassword(formData.password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+
+    if (emailError || passwordError) {
       return;
     }
 
     setLoading(true);
     try {
-      await login({ email, password }, navigate);
+      // login returns a promise, so we can use .then() or await
+      await login({ email: formData.email, password: formData.password }, navigate);
     } catch (err) {
-      setError(
+      setGeneralError(
         err.response?.data?.message ||
-          "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        err.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
       );
     } finally {
       setLoading(false);
     }
   };
 
+
+  // Handle Guest Login
   const handleGuestLogin = () => {
+    setSocialLoading((prev) => ({ ...prev, guest: true }));
     loginAsGuest(navigate);
   };
 
@@ -49,67 +155,60 @@ export default function Login() {
         <h1 className="auth-title">Chào mừng trở lại!</h1>
         <p className="auth-subtitle">Đăng nhập để tiếp tục hành trình của bạn.</p>
 
-        {/* Error message */}
-        {error && (
-          <div style={{ color: "red", marginBottom: "15px", fontSize: "14px" }}>
-            {error}
-          </div>
+        {/* General error message */}
+        {generalError && (
+          <div className="auth-error-message">{generalError}</div>
         )}
 
-        {/* Email */}
-        <div className="password-wrapper">
-          <input
+        <form onSubmit={handleLogin}>
+          {/* Email Input */}
+          <InputField
             type="email"
+            name="email"
             placeholder="email@gmail.com"
-            className="auth-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleInputChange}
+            error={errors.email}
             disabled={loading}
           />
-        </div>
 
-        {/* Password */}
-        <div className="password-wrapper">
-          <input
-            type={showPassword ? "text" : "password"}
+          {/* Password Input */}
+          <InputField
+            type="password"
+            name="password"
             placeholder="Nhập mật khẩu của bạn"
-            className="auth-input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleInputChange}
+            error={errors.password}
             disabled={loading}
+            showPasswordToggle={true}
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
           />
-          <span
-            className="toggle-password"
-            onClick={() => setShowPassword(!showPassword)}
+
+          {/* Options */}
+          <div className="auth-options">
+            <label>
+              <input type="checkbox" /> Remember me
+            </label>
+            <span
+              className="auth-link"
+              onClick={() => navigate("/forgot-password")}
+              style={{ cursor: "pointer" }}
+            >
+              Quên mật khẩu?
+            </span>
+          </div>
+
+          {/* Login button */}
+          <button
+            className="auth-btn primary"
+            type="submit"
+            disabled={loading}
           >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </span>
-        </div>
-
-        {/* Options */}
-        <div className="auth-options">
-          <label>
-            <input type="checkbox" /> Remember me
-          </label>
-
-          {/* 🔥 FIXED: Thêm onClick navigate */}
-          <span
-            className="auth-link"
-            onClick={() => navigate("/forgot-password")}
-            style={{ cursor: "pointer" }}
-          >
-            Quên mật khẩu?
-          </span>
-        </div>
-
-        {/* Login button */}
-        <button
-          className="auth-btn primary"
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+          </button>
+        </form>
 
         {/* Register */}
         <p className="auth-footer">
@@ -121,25 +220,33 @@ export default function Login() {
 
         <div className="divider">HOẶC</div>
 
-        {/* Social login */}
-        <button className="auth-btn google social-btn">
-          <FcGoogle className="social-icon" />
-          <span>Đăng nhập bằng Google</span>
-        </button>
+        {/* Social login buttons */}
+        <SocialLoginButton
+          type="google"
+          icon={FcGoogle}
+          text="Đăng nhập bằng Google"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          loading={socialLoading.google}
+        />
 
-        <button className="auth-btn facebook social-btn">
-          <FaFacebookF className="social-icon" />
-          <span>Đăng nhập bằng Facebook</span>
-        </button>
+        <SocialLoginButton
+          type="facebook"
+          icon={FaFacebookF}
+          text="Đăng nhập bằng Facebook"
+          onClick={handleFacebookLogin}
+          disabled={loading}
+          loading={socialLoading.facebook}
+        />
 
-        <button
-          className="auth-btn guest social-btn"
+        <SocialLoginButton
+          type="guest"
+          icon={FaUser}
+          text="Đăng nhập bằng khách"
           onClick={handleGuestLogin}
           disabled={loading}
-        >
-          <FaUser className="social-icon" />
-          <span>Đăng nhập bằng khách</span>
-        </button>
+          loading={socialLoading.guest}
+        />
       </div>
     </div>
   );
