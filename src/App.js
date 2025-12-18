@@ -16,6 +16,7 @@ import Payment from "./Pages/Payment/Payment";
 import VocabularyReview from "./Pages/VocabularyReview/VocabularyReview";
 import GoogleCallback from "./Pages/AuthCallback/GoogleCallback";
 import FacebookCallback from "./Pages/AuthCallback/FacebookCallback";
+import CourseDetail from "./Pages/CourseDetail/CourseDetail";
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
         <Route path="/vocabulary-review" element={<VocabularyReview />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/auth/facebook/callback" element={<FacebookCallback />} />
+        <Route path="/course/:courseId" element={<CourseDetail />} />
       </Routes>
     </BrowserRouter>
   );

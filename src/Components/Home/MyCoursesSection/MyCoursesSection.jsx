@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CourseCard from "../CourseCard/CourseCard";
 import { courseService } from "../../../Services/courseService";
-import mochiKhoaHocImage from "../../../Assets/Logo/mochi-khoahoc.jpg";
+import { mochiKhoaHoc as mochiKhoaHocImage } from "../../../Assets";
 import "./MyCoursesSection.css";
 
 export default function MyCoursesSection({ courses = [] }) {
@@ -25,6 +25,7 @@ export default function MyCoursesSection({ courses = [] }) {
                     // Map API response to CourseCard format
                     const mappedCourses = featuredCourses.map((course) => ({
                         id: course.courseId,
+                        courseId: course.courseId,
                         title: course.title,
                         imageUrl: course.imageUrl && course.imageUrl.trim() !== "" 
                             ? course.imageUrl 

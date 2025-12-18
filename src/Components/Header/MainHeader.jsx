@@ -2,18 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
-import logo from "../../Assets/Logo/mochi-welcome.jpg";
+import { mochiWelcome as logo, iconHome, iconCourse, iconOntap, iconSotay, iconBell, iconStreakFire as iconFireStreak } from "../../Assets";
 import ProfileDropdown from "./ProfileDropdown";
 import { streakService } from "../../Services/streakService";
 import { useAuth } from "../../Context/AuthContext";
-
-// Import icons from Assets/Icons (SVG)
-import iconHome from "../../Assets/Icons/icon_home.svg";
-import iconCourse from "../../Assets/Icons/icon_course.svg";
-import iconOntap from "../../Assets/Icons/icon_ontap.svg";
-import iconSotay from "../../Assets/Icons/icon_sotay.svg";
-import iconBell from "../../Assets/Icons/Icon.svg";
-import iconFireStreak from "../../Assets/Icons/icon_streak_fire.svg";
 
 export default function MainHeader() {
   const [streakDays, setStreakDays] = useState(0);
@@ -78,7 +70,7 @@ export default function MainHeader() {
   return (
     <header className="main-header">
       {/* LEFT: logo + brand */}
-      <div className="main-header__left" onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
+      <div className="main-header__left" onClick={() => navigate("/my-courses")} style={{ cursor: "pointer" }}>
         <img src={logo} alt="logo" className="main-header__logo" />
         <span className="main-header__brand">Catalunya English</span>
       </div>

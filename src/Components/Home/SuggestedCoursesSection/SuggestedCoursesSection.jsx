@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SuggestedCourseCard from "../SuggestedCourseCard/SuggestedCourseCard";
 import { courseService } from "../../../Services/courseService";
-import mochiKhoaHocImage from "../../../Assets/Logo/mochi-khoahoc.jpg";
+import { mochiKhoaHoc as mochiKhoaHocImage } from "../../../Assets";
 import "./SuggestedCoursesSection.css";
 
 export default function SuggestedCoursesSection({ courses = [] }) {
@@ -20,6 +20,7 @@ export default function SuggestedCoursesSection({ courses = [] }) {
                     // Lấy tất cả khóa học hệ thống, không lọc isFeatured
                     const mappedCourses = response.data.data.map((course) => ({
                         id: course.courseId,
+                        courseId: course.courseId,
                         title: course.title,
                         skill: "Hệ thống",
                         imageUrl: course.imageUrl && course.imageUrl.trim() !== "" 

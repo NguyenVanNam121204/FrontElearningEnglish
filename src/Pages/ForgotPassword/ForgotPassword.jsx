@@ -3,7 +3,7 @@ import "./ForgotPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate } from "react-router-dom";
 import { InputField } from "../../Components/Auth";
-import iconLock from "../../Assets/Icons/icon_lock.svg";
+import { iconLock } from "../../Assets";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();

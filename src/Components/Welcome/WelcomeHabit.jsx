@@ -1,6 +1,6 @@
 import React from "react";
 import "./WelcomeHabit.css";
-import mochiLoading from "../../Assets/Logo/mochi-loading.jpg";
+import { mochiLoading } from "../../Assets";
 
 const FACEBOOK_GROUP_URL = "https://web.facebook.com/groups/843825855021989";
 

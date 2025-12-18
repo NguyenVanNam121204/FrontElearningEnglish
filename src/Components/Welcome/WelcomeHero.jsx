@@ -1,8 +1,6 @@
 import React from "react";
 import "./WelcomeHero.css";
-import welcomeImage from "../../Assets/Logo/welcome.png";
-import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
-import mochiLoading from "../../Assets/Logo/mochi-loading.jpg";
+import { welcome as welcomeImage, mochiWelcome, mochiLoading } from "../../Assets";
 import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 

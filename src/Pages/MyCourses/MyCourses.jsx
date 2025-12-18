@@ -8,7 +8,7 @@ import PublicCourseCard from "../../Components/Courses/PublicCourseCard/PublicCo
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { enrollmentService } from "../../Services/enrollmentService";
 import { courseService } from "../../Services/courseService";
-import mochiKhoaHocImage from "../../Assets/Logo/mochi-khoahoc.jpg";
+import { mochiKhoaHoc as mochiKhoaHocImage } from "../../Assets";
 
 export default function MyCourses() {
     const navigate = useNavigate();
@@ -48,6 +48,7 @@ export default function MyCourses() {
                 
                 const mappedPublicCourses = featuredCourses.map((course) => ({
                     id: course.courseId,
+                    courseId: course.courseId,
                     title: course.title,
                     imageUrl: course.imageUrl && course.imageUrl.trim() !== "" 
                         ? course.imageUrl 
@@ -90,11 +91,17 @@ export default function MyCourses() {
     };
 
     const handleContinueCourse = (course) => {
-        navigate(`/course/${course.id}`);
+        const courseId = course.id || course.courseId;
+        if (courseId) {
+            navigate(`/course/${courseId}`);
+        }
     };
 
     const handleStartCourse = (course) => {
-        navigate(`/course/${course.id}`);
+        const courseId = course.id || course.courseId;
+        if (courseId) {
+            navigate(`/course/${courseId}`);
+        }
     };
 
     return (

@@ -21,14 +21,22 @@ export default function AccountUpgradeSection({
                 const packagesData = response.data?.data || [];
                 
                 // Map API data to component format
-                const mappedPackages = packagesData.map((pkg) => ({
-                    teacherPackageId: pkg.teacherPackageId,
-                    packageType: pkg.packageName?.toLowerCase() || "",
-                    title: pkg.packageName || "",
-                    description: `Gói ${pkg.packageName} Teacher Package`,
-                    price: `${pkg.price?.toLocaleString("vi-VN") || 0}đ/tháng`,
-                    level: pkg.level || "",
-                }));
+                const mappedPackages = packagesData.map((pkg) => {
+                    // Format price: if 0 show "Free", otherwise show price with currency
+                    let priceDisplay = "Free";
+                    if (pkg.price && pkg.price > 0) {
+                        priceDisplay = `${pkg.price.toLocaleString("vi-VN")}đ/tháng`;
+                    }
+                    
+                    return {
+                        teacherPackageId: pkg.teacherPackageId,
+                        packageType: pkg.packageName?.toLowerCase() || "",
+                        title: pkg.packageName || "",
+                        description: `Gói ${pkg.packageName} Teacher Package`,
+                        price: priceDisplay,
+                        level: pkg.level || "",
+                    };
+                });
                 
                 setPackages(mappedPackages);
                 setError("");
