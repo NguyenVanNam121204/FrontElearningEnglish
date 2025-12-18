@@ -9,6 +9,7 @@ import {
   SuggestedCoursesSection,
   AccountUpgradeSection,
 } from "../../Components/Home";
+import WelcomeFooter from "../../Components/Welcome/WelcomeFooter";
 
 export default function Home() {
   const { user, isGuest } = useAuth();
@@ -50,6 +51,8 @@ export default function Home() {
           />
         </section>
       </div>
+
+      <WelcomeFooter />
     </>
   );
 }

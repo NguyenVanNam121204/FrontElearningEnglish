@@ -4,8 +4,8 @@
  */
 
 // Get API configuration from environment variables
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5029/api";
-const AUTH_REFRESH_URL = process.env.REACT_APP_AUTH_REFRESH_URL || `${API_BASE_URL}/auth/refresh-token`;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const AUTH_REFRESH_URL = process.env.REACT_APP_AUTH_REFRESH_URL;
 
 
 // Auth endpoints
@@ -126,6 +126,7 @@ export const API_ENDPOINTS = {
     // Streaks
     STREAKS: {
         GET_MY_STREAK: "/user/streaks",
+        CHECKIN: "/user/streaks/checkin",
     },
 };
 

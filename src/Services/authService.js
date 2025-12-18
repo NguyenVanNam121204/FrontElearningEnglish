@@ -18,7 +18,7 @@ export const authService = {
     // Log to terminal (console.log outputs to terminal in Node.js/React)
     console.log("=== authService.facebookLogin ===");
     console.log("Endpoint:", API_ENDPOINTS.AUTH.FACEBOOK_LOGIN);
-    console.log("Request data:", JSON.stringify({ ...data, AccessToken: data?.AccessToken ? "***" : undefined }, null, 2));
+    console.log("Request data:", JSON.stringify({ ...data, Code: data?.Code ? "***" : undefined }, null, 2));
     
     try {
       console.log("Making POST request to backend...");
