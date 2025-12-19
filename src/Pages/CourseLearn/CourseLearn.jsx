@@ -124,7 +124,7 @@ export default function CourseLearn() {
                                         key={lessonId || index}
                                         lesson={lesson}
                                         orderNumber={index + 1}
-                                        onClick={() => handleLessonClick(lessonId)}
+                                        onClick={handleLessonClick}
                                     />
                                 );
                             })

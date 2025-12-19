@@ -48,6 +48,15 @@
     transition: all 0.1s ease;
 }
 
+.lesson-card.completed {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.lesson-card.completed::before {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.1));
+}
+
 .lesson-image-wrapper {
     position: relative;
     width: 80px;
@@ -96,7 +105,7 @@
     right: -5px;
     width: 28px;
     height: 28px;
-    background: var(--color-secondary-cyan, #41d6e3);
+    background: var(--color-status-success, #10b981);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -104,14 +113,14 @@
     color: white;
     font-size: 16px;
     border: 3px solid white;
-    box-shadow: 0 4px 12px rgba(65, 214, 227, 0.4);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     z-index: 2;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .lesson-card:hover .lesson-completed-badge {
     transform: scale(1.2) rotateZ(15deg);
-    box-shadow: 0 6px 16px rgba(65, 214, 227, 0.5);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
 }
 
 .lesson-info {

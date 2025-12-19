@@ -5,6 +5,7 @@ import "./LessonCard.css";
 export default function LessonCard({ lesson, orderNumber, onClick }) {
     const {
         lessonId,
+        LessonId,
         title = "Bài học",
         Title,
         imageUrl,
@@ -17,6 +18,7 @@ export default function LessonCard({ lesson, orderNumber, onClick }) {
         Description,
     } = lesson || {};
 
+    const finalLessonId = lessonId || LessonId;
     const finalTitle = title || Title || "Bài học";
     const finalImageUrl = imageUrl || ImageUrl;
     const finalIsCompleted = isCompleted || IsCompleted;
@@ -24,8 +26,14 @@ export default function LessonCard({ lesson, orderNumber, onClick }) {
     const finalDescription = description || Description;
     const displayOrder = orderNumber || finalOrderIndex || 1;
 
+    const handleClick = () => {
+        if (onClick && finalLessonId) {
+            onClick(finalLessonId);
+        }
+    };
+
     return (
-        <div className="lesson-card" onClick={onClick}>
+        <div className={`lesson-card ${finalIsCompleted ? "completed" : ""}`} onClick={handleClick}>
             <div className="lesson-image-wrapper">
                 {finalImageUrl ? (
                     <img 

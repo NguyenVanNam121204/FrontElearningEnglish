@@ -58,6 +58,7 @@ export const API_ENDPOINTS = {
     // Modules
     MODULES: {
         GET_BY_COURSE: (courseId) => `/user/modules/course/${courseId}`,
+        GET_BY_LESSON: (lessonId) => `/user/modules/lesson/${lessonId}`,
         GET_BY_ID: (moduleId) => `/user/modules/${moduleId}`,
     },
     // Lectures
@@ -87,6 +88,7 @@ export const API_ENDPOINTS = {
     // Flashcards
     FLASHCARDS: {
         GET_BY_LESSON: (lessonId) => `/user/flashcards/lesson/${lessonId}`,
+        GET_BY_MODULE: (moduleId) => `/user/flashcards/module/${moduleId}`,
         GET_BY_ID: (flashcardId) => `/user/flashcards/${flashcardId}`,
     },
     // Flashcard Review
