@@ -3,7 +3,7 @@ import "./ResetPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { InputField } from "../../Components/Auth";
-import iconLock from "../../Assets/Icons/icon_lock.svg";
+import { iconLock } from "../../Assets";
 
 export default function ResetPassword() {
   const navigate = useNavigate();

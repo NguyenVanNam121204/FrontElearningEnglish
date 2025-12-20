@@ -5,7 +5,7 @@ import WelcomeHabit from "../../Components/Welcome/WelcomeHabit";
 import WelcomeIELTS from "../../Components/Welcome/WelcomeIELTS";
 import WelcomePremium from "../../Components/Welcome/WelcomePremium";
 import WelcomeFooter from "../../Components/Welcome/WelcomeFooter";
-import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
+import { mochiWelcome } from "../../Assets";
 
 export default function Welcome() {
   return (

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Loading.css";
 import Header from "../../Components/Header/LogoHeader";
-import mochiLoading from "../../Assets/Logo/mochi-loading.jpg";
+import { mochiLoading } from "../../Assets";
 
 export default function Loading() {
   const navigate = useNavigate();

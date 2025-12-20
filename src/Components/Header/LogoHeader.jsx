@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./LogoHeader.css";
-import mochiWelcome from "../../Assets/Logo/mochi-welcome.jpg";
+import { mochiWelcome } from "../../Assets";
 
 export default function Header() {
   const navigate = useNavigate();

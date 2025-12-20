@@ -1,30 +1,46 @@
 /* =========================================================
-   MAIN HEADER
+   MAIN HEADER - Override Bootstrap styles
 ========================================================= */
 .main-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   height: 70px;
-  padding: 0 28px;
-  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  padding: 0 !important;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
   color: #fff;
-  z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+/* Override Bootstrap navbar */
+.main-header.navbar {
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+}
+
+/* Bootstrap container inside header */
+.main-header .container-fluid {
+  height: 70px;
+  display: flex;
   align-items: center;
+}
+
+/* Override Bootstrap toggle button - giữ màu trắng */
+.main-header .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #fff !important;
+}
+
+.main-header .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
 /* =========================================================
    LEFT: Logo + Brand
 ========================================================= */
-.main-header__left {
+.main-header__left,
+.main-header .navbar-brand {
   display: flex;
   align-items: center;
   gap: 14px;
+  color: #fff !important;
+  text-decoration: none !important;
 }
 
 .main-header__logo {
@@ -41,15 +57,18 @@
 }
 
 /* =========================================================
-   CENTER NAV
+   CENTER NAV - Override Bootstrap Nav styles
 ========================================================= */
-.main-header__nav {
+.main-header__nav,
+.main-header .nav {
   display: flex;
   justify-content: center;
   gap: 52px;
-  /* khoảng cách giữa các menu */
+  flex-direction: row !important;
 }
 
+/* Override Bootstrap Nav.Item */
+.main-header .nav-item,
 .nav-item {
   display: flex;
   align-items: center;
@@ -61,12 +80,15 @@
   border-radius: 12px;
   transition: 0.22s ease;
   text-decoration: none;
-  color: #fff;
+  color: #fff !important;
+  background: transparent !important;
+  border: none !important;
 }
 
+.main-header .nav-item:hover,
 .nav-item:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 .nav-item svg {
@@ -80,11 +102,12 @@
 }
 
 /* ACTIVE (giống thiết kế mockup) */
+.main-header .nav-item.active,
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.32) !important;
   opacity: 1;
   font-weight: 700;
-  color: #fff;
+  color: #fff !important;
 }
 
 /* =========================================================
@@ -140,11 +163,26 @@
 }
 
 /* =========================================================
-   PROFILE DROPDOWN
+   PROFILE DROPDOWN - Override Bootstrap Dropdown styles
 ========================================================= */
 
 .profile-wrapper {
   position: relative;
+}
+
+/* Override Bootstrap dropdown-toggle */
+.profile-wrapper .dropdown-toggle {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.profile-wrapper .dropdown-toggle::after {
+  display: none !important; /* Hide Bootstrap arrow */
 }
 
 .profile-trigger {
@@ -198,21 +236,53 @@
   white-space: nowrap;
 }
 
-/* DROPDOWN PANEL */
-.profile-dropdown {
-  position: absolute;
-  right: 0;
-  top: 56px;
-  width: 240px;
-  background: #c85bb4;
-  color: #fff;
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
-  z-index: 999;
+/* DROPDOWN PANEL - Override Bootstrap dropdown-menu */
+.profile-dropdown,
+.profile-wrapper .dropdown-menu {
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  top: 56px !important;
+  width: 240px !important;
+  background: #c85bb4 !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  margin-top: 8px !important;
   animation: fadeDown 0.18s ease;
 }
 
+/* Override Bootstrap dropdown-item */
+.profile-dropdown .dropdown-item,
+.profile-wrapper .dropdown-item {
+  width: 100%;
+  padding: 12px 14px !important;
+  background: none !important;
+  border: none !important;
+  color: #fff !important;
+  text-align: left;
+  border-radius: 10px !important;
+  cursor: pointer;
+  font-size: 14px !important;
+}
+
+.profile-dropdown .dropdown-item:hover,
+.profile-wrapper .dropdown-item:hover,
+.profile-dropdown .dropdown-item:focus,
+.profile-wrapper .dropdown-item:focus {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+}
+
+.profile-dropdown .dropdown-item:active,
+.profile-wrapper .dropdown-item:active {
+  background: rgba(255, 255, 255, 0.24) !important;
+  color: #fff !important;
+}
+
+/* Button styles for backward compatibility */
 .profile-dropdown button {
   width: 100%;
   padding: 12px 14px;
@@ -229,8 +299,27 @@
   background: rgba(255, 255, 255, 0.16);
 }
 
-.profile-dropdown .teacher {
-  font-weight: 600;
+.profile-dropdown .teacher,
+.profile-wrapper .dropdown-item.teacher {
+  font-weight: 600 !important;
+}
+
+/* Override Bootstrap dropdown-divider */
+.profile-dropdown .dropdown-divider,
+.profile-wrapper .dropdown-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  margin: 8px 0 !important;
+}
+
+.profile-dropdown .logout,
+.profile-wrapper .dropdown-item.logout {
+  color: #fff !important;
+  font-weight: 500 !important;
+}
+
+.profile-dropdown .logout:hover,
+.profile-wrapper .dropdown-item.logout:hover {
+  background: rgba(255, 100, 100, 0.2) !important;
 }
 
 .profile-dropdown .logout {
