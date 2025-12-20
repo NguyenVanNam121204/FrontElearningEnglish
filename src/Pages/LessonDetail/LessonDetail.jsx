@@ -81,26 +81,72 @@ export default function LessonDetail() {
             return;
         }
 
-        // Handle both camelCase and PascalCase, and convert to number if string
-        let contentType = module.contentType || module.ContentType || 1;
-        if (typeof contentType === 'string') {
-            // Convert string to number if possible
-            contentType = parseInt(contentType) || 1;
-        }
+        // Handle both camelCase and PascalCase
+        let contentType = module.contentType || module.ContentType;
+        const contentTypeName = (module.contentTypeName || module.ContentTypeName || module.name || module.Name || "").toLowerCase();
         
+        // Debug log
+        console.log("Module clicked:", {
+            moduleId,
+            contentType,
+            contentTypeName,
+            moduleName: module.name || module.Name,
+            fullModule: module
+        });
+
+        // Convert contentType to number if it's a string or enum
+        if (typeof contentType === 'string') {
+            // Try to parse as number first
+            const parsed = parseInt(contentType);
+            if (!isNaN(parsed)) {
+                contentType = parsed;
+            } else {
+                // If it's an enum string like "Assignment", "Quiz", etc.
+                const typeLower = contentType.toLowerCase();
+                if (typeLower.includes("assignment") || typeLower.includes("quiz") || typeLower.includes("essay") || typeLower.includes("test")) {
+                    contentType = 3; // Assignment
+                } else if (typeLower.includes("flashcard") || typeLower.includes("flash")) {
+                    contentType = 4; // FlashCard
+                } else {
+                    contentType = 1; // Default to Lecture
+                }
+            }
+        }
+
+        // If contentType is still undefined or null, check contentTypeName or module name
+        if (contentType === undefined || contentType === null) {
+            // Check module name or contentTypeName for hints
+            if (contentTypeName.includes("assignment") || contentTypeName.includes("quiz") || contentTypeName.includes("essay") || contentTypeName.includes("test")) {
+                contentType = 3; // Assignment
+            } else if (contentTypeName.includes("flashcard") || contentTypeName.includes("flash")) {
+                contentType = 4; // FlashCard
+            } else {
+                contentType = 1; // Default to Lecture
+            }
+        }
+
         // Navigate based on ContentType: 1=Lecture, 2=Quiz, 3=Assignment, 4=FlashCard
-        // API sẽ được gọi trong LectureDetail/FlashCardDetail để tránh xung đột
-        if (contentType === 1) {
-            // Navigate to lecture detail page
-            navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}`);
-        } else if (contentType === 4) {
+        // API sẽ được gọi trong LectureDetail/FlashCardDetail/AssignmentDetail để tránh xung đột
+        if (contentType === 4 || contentTypeName.includes("flashcard") || contentTypeName.includes("flash")) {
             // Navigate to flashcard detail page
+            console.log("Navigating to FlashCard page");
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/flashcards`);
-        } else {
-            // TODO: Handle other content types (Quiz=2, Assignment=3)
-            console.log("Module clicked - other content type:", module, contentType);
-            // For now, navigate to lecture detail for other types (can be updated later with specific screens)
+        } else if (contentType === 2 || contentType === 3 || 
+                   contentTypeName.includes("quiz") || 
+                   contentTypeName.includes("assignment") || 
+                   contentTypeName.includes("essay") ||
+                   contentTypeName.includes("test")) {
+            // Navigate to assignment detail page (Quiz=2, Assignment=3)
+            console.log("Navigating to Assignment page");
+            navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`);
+        } else if (contentType === 1 || contentTypeName.includes("lecture")) {
+            // Navigate to lecture detail page
+            console.log("Navigating to Lecture page");
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}`);
+        } else {
+            // Default: navigate to assignment page (for safety)
+            console.log("Default: Navigating to Assignment page");
+            navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`);
         }
     };
 
