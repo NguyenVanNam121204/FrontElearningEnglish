@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
@@ -24,12 +24,34 @@ export default function FlashCardDetail() {
     const [error, setError] = useState("");
     const [showCompletion, setShowCompletion] = useState(false);
     const [completionMessage, setCompletionMessage] = useState("");
+    const moduleStartedRef = useRef(new Set());
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 setError("");
+
+                // Gọi API hoàn thành module khi vào trang flashcard - chỉ gọi một lần cho mỗi moduleId
+                const parsedModuleId = typeof moduleId === 'string' ? parseInt(moduleId) : moduleId;
+                if (parsedModuleId && !isNaN(parsedModuleId) && !moduleStartedRef.current.has(parsedModuleId)) {
+                    try {
+                        console.log(`Starting module ${parsedModuleId}...`);
+                        const response = await moduleService.startModule(parsedModuleId);
+                        moduleStartedRef.current.add(parsedModuleId);
+                        console.log(`Module ${parsedModuleId} started successfully:`, response?.data);
+                    } catch (err) {
+                        console.error(`Error starting module ${parsedModuleId}:`, err);
+                        console.error("Error details:", err.response?.data || err.message);
+                        // Tiếp tục load dữ liệu dù API có lỗi
+                    }
+                } else {
+                    if (moduleStartedRef.current.has(parsedModuleId)) {
+                        console.log(`Module ${parsedModuleId} already started, skipping API call`);
+                    } else {
+                        console.warn(`Invalid moduleId: ${moduleId} (parsed: ${parsedModuleId})`);
+                    }
+                }
 
                 // Fetch course info
                 const courseResponse = await courseService.getCourseById(courseId);

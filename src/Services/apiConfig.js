@@ -60,6 +60,7 @@ export const API_ENDPOINTS = {
         GET_BY_COURSE: (courseId) => `/user/modules/course/${courseId}`,
         GET_BY_LESSON: (lessonId) => `/user/modules/lesson/${lessonId}`,
         GET_BY_ID: (moduleId) => `/user/modules/${moduleId}`,
+        START: (moduleId) => `/user/modules/${moduleId}/start`,
     },
     // Lectures
     LECTURES: {

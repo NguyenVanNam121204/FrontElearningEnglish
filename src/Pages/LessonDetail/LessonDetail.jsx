@@ -67,8 +67,20 @@ export default function LessonDetail() {
         navigate(`/course/${courseId}/learn`);
     };
 
-    const handleModuleClick = (module) => {
-        const moduleId = module.moduleId || module.ModuleId;
+    const handleModuleClick = async (module) => {
+        const rawModuleId = module.moduleId || module.ModuleId;
+        if (!rawModuleId) {
+            console.error("Module ID is missing");
+            return;
+        }
+
+        // Parse moduleId thành số để đảm bảo đúng format
+        const moduleId = typeof rawModuleId === 'string' ? parseInt(rawModuleId) : rawModuleId;
+        if (!moduleId || isNaN(moduleId)) {
+            console.error("Invalid module ID:", rawModuleId);
+            return;
+        }
+
         // Handle both camelCase and PascalCase, and convert to number if string
         let contentType = module.contentType || module.ContentType || 1;
         if (typeof contentType === 'string') {
@@ -77,6 +89,7 @@ export default function LessonDetail() {
         }
         
         // Navigate based on ContentType: 1=Lecture, 2=Quiz, 3=Assignment, 4=FlashCard
+        // API sẽ được gọi trong LectureDetail/FlashCardDetail để tránh xung đột
         if (contentType === 1) {
             // Navigate to lecture detail page
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}`);
