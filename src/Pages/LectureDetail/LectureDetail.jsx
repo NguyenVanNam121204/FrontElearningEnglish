@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
@@ -21,6 +21,7 @@ export default function LectureDetail() {
     const [loadingTree, setLoadingTree] = useState(true);
     const [loadingLecture, setLoadingLecture] = useState(false);
     const [error, setError] = useState("");
+    const moduleStartedRef = useRef(new Set());
 
     // Helper function to find first leaf lecture (lecture without children)
     const findFirstLeafLecture = (tree) => {
@@ -61,6 +62,27 @@ export default function LectureDetail() {
             try {
                 setLoadingTree(true);
                 setError("");
+
+                // Gọi API hoàn thành module khi vào trang lecture - chỉ gọi một lần cho mỗi moduleId
+                const parsedModuleId = typeof moduleId === 'string' ? parseInt(moduleId) : moduleId;
+                if (parsedModuleId && !isNaN(parsedModuleId) && !moduleStartedRef.current.has(parsedModuleId)) {
+                    try {
+                        console.log(`Starting module ${parsedModuleId}...`);
+                        const response = await moduleService.startModule(parsedModuleId);
+                        moduleStartedRef.current.add(parsedModuleId);
+                        console.log(`Module ${parsedModuleId} started successfully:`, response?.data);
+                    } catch (err) {
+                        console.error(`Error starting module ${parsedModuleId}:`, err);
+                        console.error("Error details:", err.response?.data || err.message);
+                        // Tiếp tục load dữ liệu dù API có lỗi
+                    }
+                } else {
+                    if (moduleStartedRef.current.has(parsedModuleId)) {
+                        console.log(`Module ${parsedModuleId} already started, skipping API call`);
+                    } else {
+                        console.warn(`Invalid moduleId: ${moduleId} (parsed: ${parsedModuleId})`);
+                    }
+                }
 
                 // Fetch course info
                 const courseResponse = await courseService.getCourseById(courseId);
@@ -110,7 +132,7 @@ export default function LectureDetail() {
             fetchLectureTree();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [moduleId, courseId, lessonId]);
+    }, [moduleId, courseId, lessonId, lectureId]);
 
     // Fetch lecture detail when lectureId changes (but not during initial tree load)
     useEffect(() => {

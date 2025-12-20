@@ -7,5 +7,7 @@ export const moduleService = {
     getModulesByLessonId: (lessonId) => axiosClient.get(API_ENDPOINTS.MODULES.GET_BY_LESSON(lessonId)),
     
     getModuleById: (moduleId) => axiosClient.get(API_ENDPOINTS.MODULES.GET_BY_ID(moduleId)),
+    
+    startModule: (moduleId) => axiosClient.post(API_ENDPOINTS.MODULES.START(moduleId)),
 };
 

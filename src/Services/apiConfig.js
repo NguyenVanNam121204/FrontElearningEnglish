@@ -60,6 +60,7 @@ export const API_ENDPOINTS = {
         GET_BY_COURSE: (courseId) => `/user/modules/course/${courseId}`,
         GET_BY_LESSON: (lessonId) => `/user/modules/lesson/${lessonId}`,
         GET_BY_ID: (moduleId) => `/user/modules/${moduleId}`,
+        START: (moduleId) => `/user/modules/${moduleId}/start`,
     },
     // Lectures
     LECTURES: {
@@ -75,14 +76,17 @@ export const API_ENDPOINTS = {
     // Quizzes
     QUIZZES: {
         GET_BY_LESSON: (lessonId) => `/user/quizzes/lesson/${lessonId}`,
-        GET_BY_ID: (quizId) => `/user/quizzes/${quizId}`,
+        GET_BY_ID: (quizId) => `/user/quizzes/quiz/${quizId}`, // Fixed: backend uses /quiz/{quizId}
+        GET_BY_ASSESSMENT: (assessmentId) => `/user/quizzes/Quizz/${assessmentId}`,
     },
     // Quiz Attempts
     QUIZ_ATTEMPTS: {
-        START: "/user/quiz-attempts/start",
+        START: (quizId) => `/user/quiz-attempts/start/${quizId}`,
         SUBMIT_ANSWER: "/user/quiz-attempts/submit-answer",
-        SUBMIT: (attemptId) => `/user/quiz-attempts/${attemptId}/submit`,
+        UPDATE_ANSWER: (attemptId) => `/user/quiz-attempts/update-answer/${attemptId}`,
+        SUBMIT: (attemptId) => `/user/quiz-attempts/submit/${attemptId}`, // Backend: POST /api/user/quiz-attempts/submit/{attemptId}
         GET_BY_ID: (attemptId) => `/user/quiz-attempts/${attemptId}`,
+        RESUME: (attemptId) => `/user/quiz-attempts/resume/${attemptId}`,
         MY_ATTEMPTS: "/user/quiz-attempts/my-attempts",
     },
     // Flashcards
@@ -119,6 +123,7 @@ export const API_ENDPOINTS = {
     // Assessments
     ASSESSMENTS: {
         GET_BY_LESSON: (lessonId) => `/user/assessments/lesson/${lessonId}`,
+        GET_BY_MODULE: (moduleId) => `/user/assessments/module/${moduleId}`,
         GET_BY_ID: (assessmentId) => `/user/assessments/${assessmentId}`,
     },
     // Notifications

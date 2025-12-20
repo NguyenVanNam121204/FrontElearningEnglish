@@ -1,13 +1,9 @@
 import React from "react";
 import "./CourseSummaryCard.css";
-import { FaBook, FaTag } from "react-icons/fa";
-import { mochiKhoaHoc as mochiKhoaHocImage } from "../../../Assets";
+import { FaBook, FaTag, FaUsers } from "react-icons/fa";
+import ProgressBar from "../../CourseLearn/ProgressBar/ProgressBar";
 
 export default function CourseSummaryCard({ course, onEnroll, onUnenroll, onStartLearning }) {
-    const imageUrl = course.imageUrl && course.imageUrl.trim() !== "" 
-        ? course.imageUrl 
-        : mochiKhoaHocImage;
-
     // Format price display
     const getPriceDisplay = () => {
         if (course.price === null || course.price === undefined) {
@@ -24,9 +20,15 @@ export default function CourseSummaryCard({ course, onEnroll, onUnenroll, onStar
 
     return (
         <div className="course-summary-card">
-            <div className="course-summary-image">
-                <img src={imageUrl} alt={course.title} />
-            </div>
+            {course.isEnrolled && (
+                <div className="course-progress-section">
+                    <ProgressBar
+                        completed={course.completedLessons || 0}
+                        total={course.totalLessons || 0}
+                        percentage={course.progressPercentage || 0}
+                    />
+                </div>
+            )}
             
             <div className="course-summary-stats">
                 <div className="course-stat-item">
@@ -36,6 +38,16 @@ export default function CourseSummaryCard({ course, onEnroll, onUnenroll, onStar
                         <span className="stat-value">{course.totalLessons || 0} bài giảng</span>
                     </div>
                 </div>
+
+                {course.enrollmentCount !== undefined && (
+                    <div className="course-stat-item">
+                        <FaUsers className="stat-icon" />
+                        <div className="stat-content">
+                            <span className="stat-label">Số học viên</span>
+                            <span className="stat-value">{course.enrollmentCount || 0} học viên</span>
+                        </div>
+                    </div>
+                )}
 
                 {priceDisplay !== null && (
                     <div className="course-stat-item">
