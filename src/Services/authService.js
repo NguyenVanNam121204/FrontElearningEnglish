@@ -11,6 +11,10 @@ export const authService = {
   logout: (refreshToken) =>
     axiosClient.post(API_ENDPOINTS.AUTH.LOGOUT, { refreshToken }),
 
+  getGoogleAuthUrl: () => axiosClient.get(API_ENDPOINTS.AUTH.GOOGLE_AUTH_URL),
+  
+  getFacebookAuthUrl: () => axiosClient.get(API_ENDPOINTS.AUTH.FACEBOOK_AUTH_URL),
+
   googleLogin: (data) =>
     axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE_LOGIN, data),
 
