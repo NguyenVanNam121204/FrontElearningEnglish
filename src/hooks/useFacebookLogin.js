@@ -1,12 +1,12 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { authService } from "../Services/authService";
+import { ROUTE_PATHS } from "../Routes/Paths";
 
 /**
  * Custom hook for Facebook Login
  * Handles all Facebook OAuth login logic
- * OAuth URL is fetched from backend to avoid exposing keys in frontend
+ * Builds OAuth URL from environment variables
  */
 export const useFacebookLogin = () => {
   const navigate = useNavigate();
@@ -19,6 +19,12 @@ export const useFacebookLogin = () => {
     setError("");
 
     try {
+      // Check if Facebook App ID is configured
+      const facebookAppId = process.env.REACT_APP_FACEBOOK_APP_ID;
+      if (!facebookAppId) {
+        throw new Error("Facebook App ID chưa được cấu hình. Vui lòng kiểm tra file .env");
+      }
+
       // Generate CSRF state token (backend requirement)
       const state =
         Math.random().toString(36).substring(2, 15) +
@@ -27,33 +33,26 @@ export const useFacebookLogin = () => {
       // Store state in sessionStorage for verification after redirect
       sessionStorage.setItem("facebook_oauth_state", state);
 
-      // Get OAuth URL from backend (backend will build URL with its own keys)
-      const response = await authService.getFacebookAuthUrl();
-      
-      if (response.data?.success && response.data?.data?.authUrl) {
-        // Append state to the URL from backend
-        const authUrl = response.data.data.authUrl;
-        const separator = authUrl.includes('?') ? '&' : '?';
-        const finalAuthUrl = `${authUrl}${separator}state=${encodeURIComponent(state)}`;
-        
-        // Redirect to Facebook OAuth consent screen
-        window.location.href = finalAuthUrl;
-      } else {
-        throw new Error(response.data?.message || "Không thể lấy Facebook OAuth URL từ server");
-      }
+      // Build redirect URI
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+      const redirectUri = `${frontendUrl}${ROUTE_PATHS.FACEBOOK_CALLBACK}`;
+
+      // Build Facebook OAuth URL
+      const facebookAuthUrl = new URL("https://www.facebook.com/v18.0/dialog/oauth");
+      facebookAuthUrl.searchParams.set("client_id", facebookAppId);
+      facebookAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      facebookAuthUrl.searchParams.set("response_type", "code");
+      facebookAuthUrl.searchParams.set("scope", "email,public_profile");
+      facebookAuthUrl.searchParams.set("state", state);
+
+      // Redirect to Facebook OAuth consent screen
+      window.location.href = facebookAuthUrl.toString();
     } catch (err) {
       console.error("Facebook login error:", err);
-      
-      // Handle 404 error specifically (endpoint not found)
-      if (err.response?.status === 404) {
-        setError("Backend chưa có endpoint để lấy Facebook OAuth URL. Vui lòng liên hệ quản trị viên.");
-      } else {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Đăng nhập bằng Facebook thất bại. Vui lòng thử lại.";
-        setError(errorMessage);
-      }
+      const errorMessage =
+        err.message ||
+        "Đăng nhập bằng Facebook thất bại. Vui lòng thử lại.";
+      setError(errorMessage);
       setLoading(false);
     }
   }, []);

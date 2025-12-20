@@ -101,6 +101,7 @@
     font-size: 20px;
     font-weight: bold;
     flex-shrink: 0;
+}
 
 @media (max-width: 768px) {
 }

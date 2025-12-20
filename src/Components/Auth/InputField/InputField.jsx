@@ -15,9 +15,15 @@ export default function InputField({
     name,
     maxLength,
 }) {
+    const containerClasses = [
+        "input-field-container",
+        error ? "error" : "",
+        showPasswordToggle ? "has-password-toggle" : ""
+    ].filter(Boolean).join(" ");
+
     return (
         <div className="input-field-wrapper">
-            <div className={`input-field-container ${error ? "error" : ""}`}>
+            <div className={containerClasses}>
                 <input
                     type={showPasswordToggle ? (showPassword ? "text" : "password") : type}
                     className="input-field"

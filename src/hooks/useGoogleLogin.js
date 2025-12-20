@@ -1,12 +1,12 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { authService } from "../Services/authService";
+import { ROUTE_PATHS } from "../Routes/Paths";
 
 /**
  * Custom hook for Google Login
  * Handles all Google OAuth login logic
- * OAuth URL is fetched from backend to avoid exposing keys in frontend
+ * Builds OAuth URL from environment variables
  */
 export const useGoogleLogin = () => {
   const navigate = useNavigate();
@@ -19,6 +19,12 @@ export const useGoogleLogin = () => {
     setError("");
 
     try {
+      // Check if Google Client ID is configured
+      const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      if (!googleClientId) {
+        throw new Error("Google Client ID chưa được cấu hình. Vui lòng kiểm tra file .env");
+      }
+
       // Generate CSRF state token (backend requirement)
       const state =
         Math.random().toString(36).substring(2, 15) +
@@ -27,33 +33,28 @@ export const useGoogleLogin = () => {
       // Store state in sessionStorage for verification after redirect
       sessionStorage.setItem("google_oauth_state", state);
 
-      // Get OAuth URL from backend (backend will build URL with its own keys)
-      const response = await authService.getGoogleAuthUrl();
-      
-      if (response.data?.success && response.data?.data?.authUrl) {
-        // Append state to the URL from backend
-        const authUrl = response.data.data.authUrl;
-        const separator = authUrl.includes('?') ? '&' : '?';
-        const finalAuthUrl = `${authUrl}${separator}state=${encodeURIComponent(state)}`;
-        
-        // Redirect to Google OAuth consent screen
-        window.location.href = finalAuthUrl;
-      } else {
-        throw new Error(response.data?.message || "Không thể lấy Google OAuth URL từ server");
-      }
+      // Build redirect URI
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+      const redirectUri = `${frontendUrl}${ROUTE_PATHS.GOOGLE_CALLBACK}`;
+
+      // Build Google OAuth URL
+      const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      googleAuthUrl.searchParams.set("client_id", googleClientId);
+      googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      googleAuthUrl.searchParams.set("response_type", "code");
+      googleAuthUrl.searchParams.set("scope", "openid email profile");
+      googleAuthUrl.searchParams.set("state", state);
+      googleAuthUrl.searchParams.set("access_type", "offline");
+      googleAuthUrl.searchParams.set("prompt", "consent");
+
+      // Redirect to Google OAuth consent screen
+      window.location.href = googleAuthUrl.toString();
     } catch (err) {
       console.error("Google login error:", err);
-      
-      // Handle 404 error specifically (endpoint not found)
-      if (err.response?.status === 404) {
-        setError("Backend chưa có endpoint để lấy Google OAuth URL. Vui lòng liên hệ quản trị viên.");
-      } else {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
-        setError(errorMessage);
-      }
+      const errorMessage =
+        err.message ||
+        "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
+      setError(errorMessage);
       setLoading(false);
     }
   }, []);
