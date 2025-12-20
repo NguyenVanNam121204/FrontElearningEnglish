@@ -1,12 +1,12 @@
 // Components/Header/ProfileDropdown.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Dropdown } from "react-bootstrap";
 import { useAuth } from "../../Context/AuthContext";
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
   const { user: authUser, roles, isGuest, logout } = useAuth();
-  const [open, setOpen] = useState(false);
 
   const isTeacher = roles.includes("Teacher");
   const isAdmin = roles.includes("Admin");
@@ -16,9 +16,12 @@ export default function ProfileDropdown() {
   const user = authUser;
 
   return (
-    <div className="profile-wrapper">
-      {/* AVATAR */}
-      <div className="profile-trigger" onClick={() => setOpen(!open)}>
+    <Dropdown className="profile-wrapper" align="end">
+      <Dropdown.Toggle 
+        as="div" 
+        className="profile-trigger"
+        id="profile-dropdown"
+      >
         <div className="avatar">
           {isGuest ? (
             "👤"
@@ -34,72 +37,69 @@ export default function ProfileDropdown() {
             <span className="role">Học sinh</span>
           </div>
         )}
-      </div>
+      </Dropdown.Toggle>
 
-      {/* DROPDOWN */}
-      {open && (
-        <div className="profile-dropdown">
-          {/* ===== GUEST ===== */}
-          {isGuest && (
-            <>
-              <button onClick={() => navigate("/login")}>
-                Đăng nhập
-              </button>
-              <button onClick={() => navigate("/register")}>
-                Đăng ký
-              </button>
-            </>
-          )}
+      <Dropdown.Menu className="profile-dropdown">
+        {/* ===== GUEST ===== */}
+        {isGuest && (
+          <>
+            <Dropdown.Item onClick={() => navigate("/login")}>
+              Đăng nhập
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => navigate("/register")}>
+              Đăng ký
+            </Dropdown.Item>
+          </>
+        )}
 
-          {/* ===== USER / TEACHER ===== */}
-          {!isGuest && !isAdmin && (
-            <>
-              <button onClick={() => navigate("/profile")}>
-                Thông tin cá nhân
-              </button>
+        {/* ===== USER / TEACHER ===== */}
+        {!isGuest && !isAdmin && (
+          <>
+            <Dropdown.Item onClick={() => navigate("/profile")}>
+              Thông tin cá nhân
+            </Dropdown.Item>
 
-              <button onClick={() => navigate("/transactions")}>
-                Lịch sử giao dịch
-              </button>
+            <Dropdown.Item onClick={() => navigate("/transactions")}>
+              Lịch sử giao dịch
+            </Dropdown.Item>
 
-              {isTeacher && user?.teacherSubscription && (
-                <button
-                  className="teacher"
-                  onClick={() => navigate("/teacher")}
-                >
-                  {isPremium
-                    ? "Gói giáo viên Premium"
-                    : "Gói giáo viên cơ bản"}
-                </button>
-              )}
-
-              <div className="divider" />
-
-              <button
-                className="logout"
-                onClick={() => logout(navigate)}
+            {isTeacher && user?.teacherSubscription && (
+              <Dropdown.Item
+                className="teacher"
+                onClick={() => navigate("/teacher")}
               >
-                Đăng xuất
-              </button>
-            </>
-          )}
+                {isPremium
+                  ? "Gói giáo viên Premium"
+                  : "Gói giáo viên cơ bản"}
+              </Dropdown.Item>
+            )}
 
-          {/* ===== ADMIN ===== */}
-          {isAdmin && (
-            <>
-              <button onClick={() => navigate("/admin")}>
-                Trang quản trị
-              </button>
-              <button
-                className="logout"
-                onClick={() => logout(navigate)}
-              >
-                Đăng xuất
-              </button>
-            </>
-          )}
-        </div>
-      )}
-    </div>
+            <Dropdown.Divider />
+
+            <Dropdown.Item
+              className="logout"
+              onClick={() => logout(navigate)}
+            >
+              Đăng xuất
+            </Dropdown.Item>
+          </>
+        )}
+
+        {/* ===== ADMIN ===== */}
+        {isAdmin && (
+          <>
+            <Dropdown.Item onClick={() => navigate("/admin")}>
+              Trang quản trị
+            </Dropdown.Item>
+            <Dropdown.Item
+              className="logout"
+              onClick={() => logout(navigate)}
+            >
+              Đăng xuất
+            </Dropdown.Item>
+          </>
+        )}
+      </Dropdown.Menu>
+    </Dropdown>
   );
 }
