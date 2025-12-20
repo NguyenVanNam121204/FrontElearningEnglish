@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Badge } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
 import { quizAttemptService } from "../../Services/quizAttemptService";
-import { FaCheckCircle, FaTimesCircle, FaClock, FaTrophy, FaRedo } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaClock, FaTrophy } from "react-icons/fa";
 import "./QuizResults.css";
 
 export default function QuizResults() {
@@ -281,12 +281,6 @@ export default function QuizResults() {
                                             onClick={() => navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`)}
                                         >
                                             Quay lại
-                                        </Button>
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/quiz/${quizId}/attempt/${attemptId}`)}
-                                        >
-                                            <FaRedo /> Xem lại bài làm
                                         </Button>
                                     </div>
                                 </Card.Body>

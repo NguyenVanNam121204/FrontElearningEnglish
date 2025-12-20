@@ -31,6 +31,7 @@ export default function QuizDetail() {
     const fetchedKeyRef = useRef(null);
     const [remainingTime, setRemainingTime] = useState(null); // State để update timer real-time
     const endTimeRef = useRef(null); // Lưu endTime được tính từ startedAt + Duration
+    const autoSubmitCalledRef = useRef(false); // Để tránh gọi auto-submit nhiều lần
 
     // Flatten all questions from sections and groups
     const getAllQuestions = () => {
@@ -402,17 +403,19 @@ export default function QuizDetail() {
                 return;
             }
             
-            // Calculate endTime = startedAt + Duration (minutes)
-            // Giống backend: endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value)
+            // Calculate endTime = startedAt + Duration (minutes) + 10 seconds buffer
+            // Thêm 10 giây buffer để tối ưu trải nghiệm người dùng
             const durationMs = Number(quizDuration) * 60 * 1000;
-            const endTime = new Date(startedAt.getTime() + durationMs);
+            const bufferMs = 10 * 1000; // 10 seconds buffer
+            const endTime = new Date(startedAt.getTime() + durationMs + bufferMs);
             endTimeRef.current = endTime;
             
             console.log("✅ === Timer Calculation ===");
             console.log("StartedAt:", startedAt.toISOString());
             console.log("Duration:", quizDuration, "minutes");
             console.log("Duration (ms):", durationMs);
-            console.log("EndTime:", endTime.toISOString());
+            console.log("Buffer: 10 seconds");
+            console.log("EndTime (with buffer):", endTime.toISOString());
             console.log("Now:", new Date().toISOString());
             console.log("============================");
         } catch (err) {
@@ -438,14 +441,17 @@ export default function QuizDetail() {
             
             setRemainingTime(remaining);
             
-            // Auto-submit if time is up
-            if (remaining <= 0) {
+            // Auto-submit if time is up (chỉ submit một lần)
+            if (remaining <= 0 && !autoSubmitCalledRef.current && !submitting) {
                 console.log("⏰ Time is up! Auto-submitting quiz...");
+                autoSubmitCalledRef.current = true; // Đánh dấu đã gọi để tránh gọi lại
+                
                 if (timerIntervalRef.current) {
                     clearInterval(timerIntervalRef.current);
                     timerIntervalRef.current = null;
                 }
-                // Call handleSubmitQuiz to auto-submit
+                
+                // Call handleSubmitQuiz to auto-submit (chỉ gọi một lần)
                 handleSubmitQuiz();
             }
         } catch (err) {
@@ -752,7 +758,7 @@ export default function QuizDetail() {
     // Tính thời gian làm bài
     // Backend trả về Duration (phút), StartedAt, TimeSpentSeconds
     const quizDuration = quiz?.Duration || quiz?.duration; // Phút
-    const timeLimit = quizDuration ? quizDuration * 60 : null; // Convert minutes to seconds
+    const timeLimit = quizDuration ? (quizDuration * 60 + 10) : null; // Convert minutes to seconds + 10s buffer
     
     // Debug logs
     console.log("=== Timer Debug ===");
@@ -829,12 +835,16 @@ export default function QuizDetail() {
                                     timeLimit={timeLimit}
                                     remainingTime={remainingTime}
                                     onTimeUp={() => {
-                                        setNotification({
-                                            isOpen: true,
-                                            type: "warning",
-                                            message: "Hết thời gian làm bài!"
-                                        });
-                                        handleSubmitQuiz();
+                                        // Chỉ gọi một lần
+                                        if (!autoSubmitCalledRef.current && !submitting) {
+                                            autoSubmitCalledRef.current = true;
+                                            setNotification({
+                                                isOpen: true,
+                                                type: "warning",
+                                                message: "Hết thời gian làm bài!"
+                                            });
+                                            handleSubmitQuiz();
+                                        }
                                     }}
                                 />
                                 

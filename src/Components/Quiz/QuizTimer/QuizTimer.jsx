@@ -3,10 +3,14 @@ import { FaClock } from "react-icons/fa";
 import "./QuizTimer.css";
 
 export default function QuizTimer({ timeLimit, remainingTime, onTimeUp }) {
+    const hasCalledTimeUp = React.useRef(false);
+    
     // remainingTime được tính real-time từ parent (QuizDetail)
-    // Chỉ cần hiển thị và gọi onTimeUp khi hết thời gian
+    // Chỉ cần hiển thị và gọi onTimeUp khi hết thời gian (chỉ một lần)
     useEffect(() => {
-        if (remainingTime !== null && remainingTime !== undefined && remainingTime <= 0) {
+        if (remainingTime !== null && remainingTime !== undefined && remainingTime <= 0 && !hasCalledTimeUp.current) {
+            hasCalledTimeUp.current = true;
+            console.log("⏰ QuizTimer: Time is up, calling onTimeUp");
             onTimeUp?.();
         }
     }, [remainingTime, onTimeUp]);
