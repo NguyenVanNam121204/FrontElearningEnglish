@@ -97,7 +97,7 @@
 .course-start-btn {
     width: 100%;
     padding: 14px;
-    background: var(--color-secondary-pink, #d946ef);
+    background: var(--color-secondary-cyan, #41d6e3);
     color: var(--color-text-white, white);
     border: none;
     border-radius: 12px;

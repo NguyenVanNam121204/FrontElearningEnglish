@@ -15,7 +15,7 @@
     padding: 8px 12px;
     border-radius: 12px;
     animation: fadeInLeft 0.8s ease-out, slideInGlow 1.5s ease-out 0.5s both, gradientTextShift 4s ease-in-out infinite;
-    background: linear-gradient(135deg, #41d6e3 0%, #1f2937 40%, #d946ef 80%, #41d6e3 100%);
+    background: linear-gradient(135deg, #41d6e3 0%, #d946ef 50%, #41d6e3 100%);
     background-size: 300% 300%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

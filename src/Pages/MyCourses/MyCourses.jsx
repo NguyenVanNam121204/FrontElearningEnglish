@@ -295,6 +295,7 @@ export default function MyCourses() {
                                             key={course.id || index}
                                             course={course}
                                             isEnrolled={true} // Tất cả đều đã đăng ký
+                                            showEnrolledBadge={false} // Không hiển thị badge ở trang "Khóa học của tôi"
                                         />
                                     ))}
                                 </div>

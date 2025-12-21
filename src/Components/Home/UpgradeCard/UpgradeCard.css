@@ -3,11 +3,16 @@
     padding: 14px;
     border: 1px solid var(--color-border-light, #e5e7eb);
     cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease;
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+.upgrade-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .upgrade-card.selected {
@@ -66,18 +71,32 @@
     border-radius: 20px;
     color: white;
     cursor: pointer;
-    transition: background 0.2s ease, opacity 0.2s ease;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     font-size: 13px;
     font-weight: 500;
-    background: var(--color-secondary-cyan, #41d6e3);
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
 }
 
 .upgrade-btn:hover {
-    opacity: 0.9;
+    background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
 
-/* Khi hover vào upgrade card (selected), nút và border chuyển sang màu pink */
+.upgrade-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+/* Khi hover vào upgrade card (selected), nút có hiệu ứng nổi bật hơn */
 .upgrade-card.selected .upgrade-btn {
-    background: var(--color-secondary-pink, #d946ef);
+    background: linear-gradient(135deg, #d946ef 0%, #ec4899 100%);
+    box-shadow: 0 4px 16px rgba(217, 70, 239, 0.4);
+}
+
+.upgrade-card.selected .upgrade-btn:hover {
+    background: linear-gradient(135deg, #c026d3 0%, #db2777 100%);
+    box-shadow: 0 6px 20px rgba(217, 70, 239, 0.5);
 }
