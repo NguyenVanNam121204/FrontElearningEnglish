@@ -28,8 +28,10 @@
     align-items: center;
     width: 100%;
     /* Ẩn scrollbar nhưng vẫn cho phép scroll */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
 /* Ẩn scrollbar cho Chrome, Safari và Opera */
@@ -45,6 +47,7 @@
     color: var(--color-text-secondary, #6b7280);
     font-size: 16px;
 }
+
 @media (max-width: 1024px) {
     .course-card {
         width: 220px;
@@ -55,7 +58,7 @@
     .course-card {
         width: 200px;
     }
-    
+
     .course-grid {
         gap: 12px;
     }
