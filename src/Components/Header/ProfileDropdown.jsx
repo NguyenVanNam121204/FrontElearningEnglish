@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "react-bootstrap";
 import { useAuth } from "../../Context/AuthContext";
+import { ROUTE_PATHS } from "../../Routes/Paths";
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
@@ -17,8 +18,8 @@ export default function ProfileDropdown() {
 
   return (
     <Dropdown className="profile-wrapper" align="end">
-      <Dropdown.Toggle 
-        as="div" 
+      <Dropdown.Toggle
+        as="div"
         className="profile-trigger"
         id="profile-dropdown"
       >
@@ -33,7 +34,11 @@ export default function ProfileDropdown() {
         </div>
         {!isGuest && (
           <div className="user-info">
-            <span className="name">{user?.fullName}</span>
+            <span className="name">
+              {user?.fullName && user.fullName.length > 12
+                ? `${user.fullName.substring(0, 12)}...`
+                : user?.fullName}
+            </span>
             <span className="role">Học sinh</span>
           </div>
         )}
@@ -59,8 +64,8 @@ export default function ProfileDropdown() {
               Thông tin cá nhân
             </Dropdown.Item>
 
-            <Dropdown.Item onClick={() => navigate("/transactions")}>
-              Lịch sử giao dịch
+            <Dropdown.Item onClick={() => navigate(ROUTE_PATHS.PAYMENT_HISTORY)}>
+              Lịch sử thanh toán
             </Dropdown.Item>
 
             {isTeacher && user?.teacherSubscription && (

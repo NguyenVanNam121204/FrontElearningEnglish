@@ -148,7 +148,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,6 +156,7 @@
   width: 36px;
   height: 36px;
   transition: background 0.2s ease;
+  position: relative;
 }
 
 .notification-button:hover {
@@ -166,6 +167,12 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+  margin: 0;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* =========================================================
@@ -522,6 +529,7 @@
     font-size: 16px !important;
     font-weight: 500 !important;
     color: #fff !important;
+    position: relative !important;
   }
 
   .main-header .notification-button:hover {
@@ -533,6 +541,10 @@
     height: 22px !important;
     margin-right: 14px !important;
     flex-shrink: 0 !important;
+    position: static !important;
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
   }
 
   .main-header .profile-wrapper {

@@ -39,14 +39,16 @@
     flex: 1;
 }
 
-.stat-label {
-    font-size: 13px;
+/* Scope cụ thể cho CourseSummaryCard để tránh xung đột */
+.course-summary-card .stat-label {
+    font-size: 11px;
     color: var(--color-text-secondary, #6b7280);
+    font-weight: 400;
 }
 
-.stat-value {
-    font-size: 15px;
-    font-weight: 600;
+.course-summary-card .stat-value {
+    font-size: 17px;
+    font-weight: 500;
     color: var(--color-text-primary, #1f2937);
 }
 
@@ -130,4 +132,3 @@
         height: 180px;
     }
 }
-

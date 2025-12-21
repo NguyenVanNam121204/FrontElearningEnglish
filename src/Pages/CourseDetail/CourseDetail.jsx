@@ -11,14 +11,19 @@ import NotificationModal from "../../Components/Common/NotificationModal/Notific
 import { courseService } from "../../Services/courseService";
 import { enrollmentService } from "../../Services/enrollmentService";
 import { paymentService } from "../../Services/paymentService";
+import { useAuth } from "../../Context/AuthContext";
+import { ROUTE_PATHS } from "../../Routes/Paths";
+import LoginRequiredModal from "../../Components/Common/LoginRequiredModal/LoginRequiredModal";
 
 export default function CourseDetail() {
     const { courseId } = useParams();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [notification, setNotification] = useState({ isOpen: false, type: "success", message: "" });
 
@@ -28,7 +33,7 @@ export default function CourseDetail() {
                 setLoading(true);
                 setError("");
                 const response = await courseService.getCourseById(courseId);
-                
+
                 if (response.data?.success && response.data?.data) {
                     setCourse(response.data.data);
                 } else {
@@ -48,6 +53,11 @@ export default function CourseDetail() {
     }, [courseId]);
 
     const handleEnroll = () => {
+        // Kiểm tra đăng nhập trước khi mở modal đăng ký
+        if (!isAuthenticated) {
+            setShowLoginModal(true);
+            return;
+        }
         setShowEnrollmentModal(true);
     };
 
@@ -66,7 +76,7 @@ export default function CourseDetail() {
                 if (response.data?.success && response.data?.data) {
                     setCourse(response.data.data);
                 }
-                
+
                 setShowEnrollmentModal(false);
                 setNotification({
                     isOpen: true,
@@ -109,13 +119,13 @@ export default function CourseDetail() {
                 // In a real scenario, you might redirect to payment gateway here
                 try {
                     await enrollmentService.enroll({ courseId: parseInt(courseId) });
-                    
+
                     // Refresh course data to update enrollment status
                     const response = await courseService.getCourseById(courseId);
                     if (response.data?.success && response.data?.data) {
                         setCourse(response.data.data);
                     }
-                    
+
                     setShowEnrollmentModal(false);
                     setNotification({
                         isOpen: true,
@@ -198,7 +208,7 @@ export default function CourseDetail() {
 
                     <Row>
                         <Col>
-                            <CourseBanner 
+                            <CourseBanner
                                 title={course.title}
                                 imageUrl={course.imageUrl}
                             />
@@ -210,7 +220,7 @@ export default function CourseDetail() {
                             <CourseInfo course={course} />
                         </Col>
                         <Col lg={4}>
-                            <CourseSummaryCard 
+                            <CourseSummaryCard
                                 course={course}
                                 onEnroll={handleEnroll}
                                 onStartLearning={handleStartLearning}
@@ -234,6 +244,11 @@ export default function CourseDetail() {
                 onClose={() => setNotification({ isOpen: false, type: "success", message: "" })}
                 type={notification.type}
                 message={notification.message}
+            />
+
+            <LoginRequiredModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
             />
         </>
     );

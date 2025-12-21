@@ -1,19 +1,33 @@
 // src/Components/Header/MainHeader.jsx
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Navbar, Nav } from "react-bootstrap";
 import "./Header.css";
 import { mochiWelcome as logo, iconHome, iconCourse, iconOntap, iconSotay, iconBell, iconStreakFire as iconFireStreak } from "../../Assets";
 import ProfileDropdown from "./ProfileDropdown";
 import { useStreak } from "../../Context/StreakContext";
+import { useAuth } from "../../Context/AuthContext";
+import { ROUTE_PATHS } from "../../Routes/Paths";
+import LoginRequiredModal from "../Common/LoginRequiredModal/LoginRequiredModal";
 
 export default function MainHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const { streakDays } = useStreak();
+  const { isAuthenticated } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isActive = (path) => {
     return location.pathname === path;
+  };
+
+  // Kiểm tra đăng nhập trước khi navigate
+  const handleNavigation = (path, requiresAuth = false) => {
+    if (requiresAuth && !isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    navigate(path);
   };
 
 
@@ -23,7 +37,7 @@ export default function MainHeader() {
         {/* LEFT: logo + brand */}
         <Navbar.Brand
           className="main-header__left"
-          onClick={() => navigate("/my-courses")}
+          onClick={() => handleNavigation(ROUTE_PATHS.MY_COURSES, true)}
           style={{ cursor: "pointer" }}
         >
           <img src={logo} alt="logo" className="main-header__logo" />
@@ -45,7 +59,7 @@ export default function MainHeader() {
             </Nav.Item>
 
             <Nav.Item
-              onClick={() => navigate("/my-courses")}
+              onClick={() => handleNavigation(ROUTE_PATHS.MY_COURSES, true)}
               className={`nav-item ${isActive("/my-courses") ? "active" : ""}`}
             >
               <img src={iconCourse} alt="Courses" className="nav-icon" />
@@ -53,7 +67,7 @@ export default function MainHeader() {
             </Nav.Item>
 
             <Nav.Item
-              onClick={() => navigate("/vocabulary-review")}
+              onClick={() => handleNavigation(ROUTE_PATHS.VOCABULARY_REVIEW, true)}
               className={`nav-item ${isActive("/vocabulary-review") ? "active" : ""}`}
             >
               <img src={iconOntap} alt="Review" className="nav-icon" />
@@ -61,7 +75,7 @@ export default function MainHeader() {
             </Nav.Item>
 
             <Nav.Item
-              onClick={() => navigate("/vocabulary-notebook")}
+              onClick={() => handleNavigation(ROUTE_PATHS.VOCABULARY_NOTEBOOK, true)}
               className={`nav-item ${isActive("/vocabulary-notebook") ? "active" : ""}`}
             >
               <img src={iconSotay} alt="Notebook" className="nav-icon" />
@@ -82,6 +96,11 @@ export default function MainHeader() {
           </div>
         </Navbar.Collapse>
       </Container>
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </Navbar>
   );
 }
