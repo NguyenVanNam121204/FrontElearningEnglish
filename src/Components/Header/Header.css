@@ -14,6 +14,12 @@
   background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
 }
 
+/* Default: collapse luôn show trên desktop */
+.main-header .navbar-collapse {
+  display: flex !important;
+  flex-basis: auto !important;
+}
+
 /* Bootstrap container inside header */
 .main-header .container-fluid {
   height: 70px;
@@ -182,7 +188,8 @@
 }
 
 .profile-wrapper .dropdown-toggle::after {
-  display: none !important; /* Hide Bootstrap arrow */
+  display: none !important;
+  /* Hide Bootstrap arrow */
 }
 
 .profile-trigger {
@@ -342,5 +349,208 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE - Tablet & Mobile
+========================================================= */
+
+/* Tablet: Ẩn toggle button, giữ header luôn mở, ẩn text chỉ hiển thị icon */
+@media (max-width: 991.98px) and (min-width: 768px) {
+
+  /* Ẩn toggle button */
+  .main-header .navbar-toggler {
+    display: none !important;
+  }
+
+  /* Force collapse luôn show (giống desktop) */
+  .main-header .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+  }
+
+  /* Ẩn text, giữ icon */
+  .main-header .nav-item span.nav-text {
+    display: none !important;
+  }
+
+  /* Nav item chỉ hiển thị icon, căn giữa */
+  .main-header .nav-item {
+    padding: 10px 14px !important;
+    justify-content: center !important;
+    min-width: 48px;
+  }
+
+  /* Icon lớn hơn một chút để dễ nhìn */
+  .main-header .nav-icon {
+    width: 22px !important;
+    height: 22px !important;
+    margin: 0 !important;
+  }
+
+  /* Giảm gap giữa các nav items */
+  .main-header__nav,
+  .main-header .nav {
+    gap: 16px !important;
+  }
+
+  /* Brand name nhỏ hơn trên tablet */
+  .main-header__brand {
+    font-size: 16px;
+  }
+}
+
+/* Mobile: Menu collapse, hiển thị theo chiều dọc với overlay */
+@media (max-width: 767.98px) {
+
+  /* Navbar collapse - ẩn mặc định, hiện khi có class show */
+  .main-header .navbar-collapse {
+    display: none !important;
+  }
+
+  .main-header .navbar-collapse.show {
+    display: block !important;
+    position: fixed !important;
+    top: 70px !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: calc(100vh - 70px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 24px 20px !important;
+    background: linear-gradient(180deg, #6fd5e0, #d447b6) !important;
+    margin-top: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1040 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Menu collapse */
+  .main-header .navbar-collapse.show {
+    z-index: 1040 !important;
+  }
+
+
+  /* Ẩn scrollbar nhưng vẫn cho phép scroll */
+  .main-header .navbar-collapse::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .main-header .navbar-collapse::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .main-header .navbar-collapse::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  /* Nav items - hiển thị theo chiều dọc */
+  .main-header__nav,
+  .main-header .nav {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .main-header .nav-item {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 16px 20px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    border-radius: 12px !important;
+    min-height: 52px !important;
+  }
+
+  .main-header .nav-item:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  .main-header .nav-item.active {
+    background: rgba(255, 255, 255, 0.35) !important;
+    font-weight: 700 !important;
+  }
+
+  .main-header .nav-icon {
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .main-header .nav-text {
+    margin-left: 14px !important;
+    flex: 1 !important;
+  }
+
+  /* Right section - streak + notification + profile */
+  .main-header__right {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+    margin-top: 24px !important;
+    padding-top: 24px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+    align-items: stretch !important;
+  }
+
+  .main-header .streak-badge {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 14px 24px !important;
+    font-size: 16px !important;
+  }
+
+  .main-header .streak-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .main-header .notification-button {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    height: auto !important;
+    min-height: 52px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #fff !important;
+  }
+
+  .main-header .notification-button:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  .main-header .notification-icon {
+    width: 22px !important;
+    height: 22px !important;
+    margin-right: 14px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .main-header .profile-wrapper {
+    width: 100% !important;
+  }
+
+  .main-header .profile-trigger {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 8px 0 !important;
+  }
+
+  .main-header .avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .main-header .user-info {
+    font-size: 14px !important;
   }
 }
