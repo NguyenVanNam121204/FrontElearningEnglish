@@ -73,7 +73,7 @@ export default function SuggestedCoursesSection({ courses = [] }) {
 
     return (
         <div className="suggested-courses-section">
-            <h2>Khóa học hệ thống</h2>
+            <h2>Catalunya English - Hệ Thống Khóa học Số 1 Việt Nam </h2>
             {loading ? (
                 <div className="loading-message">Đang tải khóa học...</div>
             ) : error ? (

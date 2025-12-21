@@ -3,9 +3,103 @@
 }
 
 .my-courses-section h2 {
-    font-size: 22px;
+    font-size: 28px;
+    font-weight: 800;
     margin-bottom: 20px;
-    color: var(--color-text-primary, #1f2937);
+    margin-left: 0;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    padding: 8px 12px;
+    border-radius: 12px;
+    animation: fadeInLeft 0.8s ease-out, slideInGlow 1.5s ease-out 0.5s both, gradientTextShift 4s ease-in-out infinite;
+    background: linear-gradient(135deg, #41d6e3 0%, #1f2937 40%, #d946ef 80%, #41d6e3 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 40px rgba(65, 214, 227, 0.5), 0 0 80px rgba(217, 70, 239, 0.3);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes gradientTextShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.my-courses-section h2::after {
+    content: '⭐';
+    font-size: 20px;
+    animation: rotateStar 3s linear infinite, pulseStar 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes slideInGlow {
+    0% {
+        text-shadow: 0 0 0 rgba(65, 214, 227, 0);
+    }
+    100% {
+        text-shadow: 0 0 20px rgba(65, 214, 227, 0.4), 0 0 40px rgba(217, 70, 239, 0.2);
+    }
+}
+
+@keyframes rotateStar {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulseStar {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+@keyframes gradientBgShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+
+.my-courses-section h2:hover {
+    transform: translateX(8px) scale(1.05);
+    animation: fadeInLeft 0.8s ease-out, slideInGlow 1.5s ease-out 0.5s both, gradientTextShift 4s ease-in-out infinite, hoverGlow 0.6s ease forwards;
+}
+
+@keyframes hoverGlow {
+    to {
+        text-shadow: 0 0 30px rgba(65, 214, 227, 0.6), 0 0 60px rgba(217, 70, 239, 0.4);
+    }
 }
 
 .course-grid-wrapper {

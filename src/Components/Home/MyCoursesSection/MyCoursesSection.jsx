@@ -145,7 +145,7 @@ export default function MyCoursesSection({ courses = [] }) {
 
     return (
         <section className="my-courses-section">
-            <h2>Khóa học nổi bật</h2>
+            <h2>Kho tàng khóa học nổi bật</h2>
             {loading ? (
                 <div className="loading-message">Đang tải khóa học...</div>
             ) : error ? (
