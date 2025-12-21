@@ -45,7 +45,7 @@ export default function SuggestedCourseCard({ course, isEnrolled = false }) {
                         handleClick();
                     }}
                 >
-                    {isEnrolled ? "Đã đăng ký" : "Bắt đầu ngay"}
+                    {isEnrolled ? "Vào học ngay" : "Bắt đầu ngay"}
                 </button>
             </div>
         </div>

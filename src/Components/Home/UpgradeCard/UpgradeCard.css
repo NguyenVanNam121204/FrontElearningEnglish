@@ -5,6 +5,9 @@
     cursor: pointer;
     transition: border-color 0.2s ease, background 0.2s ease;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .upgrade-card.selected {
@@ -12,10 +15,20 @@
     background: rgba(217, 70, 239, 0.02);
 }
 
+/* Vùng nội dung: Title và Description */
+.upgrade-card-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
 .upgrade-card h3 {
-    margin-bottom: 4px;
+    margin: 0 0 4px 0;
     font-size: 16px;
+    font-weight: 700;
     color: var(--color-text-primary, #1f2937);
+    flex-shrink: 0;
 }
 
 .upgrade-card p {
@@ -23,13 +36,27 @@
     color: var(--color-text-secondary, #6b7280);
     margin: 0;
     line-height: 1.4;
+    flex-shrink: 0;
+}
+
+/* Vùng footer: Giá và Button */
+.upgrade-card-footer {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border-light, #e5e7eb);
 }
 
 .upgrade-card strong {
     display: block;
-    margin: 8px 0;
+    margin: 0 0 12px 0;
     font-size: 15px;
+    font-weight: 700;
     color: var(--color-text-primary, #1f2937);
+    flex-shrink: 0;
+    min-height: 21px;
 }
 
 .upgrade-btn {
@@ -43,6 +70,7 @@
     font-size: 13px;
     font-weight: 500;
     background: var(--color-secondary-cyan, #41d6e3);
+    flex-shrink: 0;
 }
 
 .upgrade-btn:hover {

@@ -116,11 +116,11 @@
 }
 
 .suggested-course-card .course-action-btn.enrolled {
-    background: var(--color-text-secondary, #6b7280) !important;
-    cursor: default;
+    background: var(--color-secondary-pink, #d946ef) !important;
+    cursor: pointer;
 }
 
 .suggested-course-card .course-action-btn.enrolled:hover {
-    transform: none !important;
-    opacity: 1 !important;
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
