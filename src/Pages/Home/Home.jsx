@@ -10,11 +10,13 @@ import {
   AccountUpgradeSection,
 } from "../../Components/Home";
 import WelcomeFooter from "../../Components/Welcome/WelcomeFooter";
+import LoginRequiredModal from "../../Components/Common/LoginRequiredModal/LoginRequiredModal";
 
 export default function Home() {
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState(null); // null hoặc teacherPackageId
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const displayName = isGuest ? "bạn" : user?.fullName || "bạn";
 
@@ -28,6 +30,13 @@ export default function Home() {
 
   const handleUpgradeClick = (e, teacherPackageId, packageType) => {
     e.stopPropagation(); // Ngăn event bubble lên package card
+
+    // Kiểm tra đăng nhập trước khi navigate
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
     // Navigate đến trang thanh toán với teacherPackageId
     navigate(`/payment?packageId=${teacherPackageId}&package=${packageType}`);
   };
@@ -52,6 +61,11 @@ export default function Home() {
       </div>
 
       <WelcomeFooter />
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </>
   );
 }

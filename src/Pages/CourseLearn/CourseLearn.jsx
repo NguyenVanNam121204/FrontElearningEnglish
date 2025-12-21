@@ -60,12 +60,38 @@ export default function CourseLearn() {
         navigate(`/course/${courseId}/lesson/${lessonId}`);
     };
 
-    // Calculate progress (handle both camelCase and PascalCase)
-    const completedLessons = lessons.filter(lesson => 
-        lesson.isCompleted || lesson.IsCompleted
-    ).length;
-    const totalLessons = lessons.length;
-    const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    // Lấy tiến độ từ API (ưu tiên) hoặc tính từ lessons array
+    const getProgressData = () => {
+        // Ưu tiên lấy từ course object (từ API getCourseById)
+        const apiCompletedLessons = course?.completedLessons || course?.CompletedLessons;
+        const apiTotalLessons = course?.totalLessons || course?.TotalLessons;
+        const apiProgressPercentage = course?.progressPercentage || course?.ProgressPercentage;
+
+        if (apiCompletedLessons !== undefined && apiTotalLessons !== undefined) {
+            // Lấy từ API
+            const safePercentage = Math.min(Math.max(Number(apiProgressPercentage) || 0, 0), 100);
+            return {
+                completed: apiCompletedLessons,
+                total: apiTotalLessons,
+                percentage: safePercentage > 0 ? safePercentage : (apiTotalLessons > 0 ? Math.round((apiCompletedLessons / apiTotalLessons) * 100) : 0)
+            };
+        }
+
+        // Fallback: tính từ lessons array
+        const completedLessons = lessons.filter(lesson =>
+            lesson.isCompleted || lesson.IsCompleted
+        ).length;
+        const totalLessons = lessons.length;
+        const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+        return {
+            completed: completedLessons,
+            total: totalLessons,
+            percentage: progressPercentage
+        };
+    };
+
+    const progressData = getProgressData();
 
     if (loading) {
         return (
@@ -106,12 +132,12 @@ export default function CourseLearn() {
                         <span className="breadcrumb-current">Lesson</span>
                     </div>
                     <CourseLearnHeader courseTitle={course?.title || course?.Title || "Khóa học"} />
-                    
-                    {totalLessons > 0 && (
-                        <ProgressBar 
-                            completed={completedLessons}
-                            total={totalLessons}
-                            percentage={progressPercentage}
+
+                    {progressData.total > 0 && (
+                        <ProgressBar
+                            completed={progressData.completed}
+                            total={progressData.total}
+                            percentage={progressData.percentage}
                         />
                     )}
 
