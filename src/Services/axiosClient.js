@@ -1,6 +1,6 @@
 import axios from "axios";
 import { tokenStorage } from "../Utils/tokenStorage";
-import { API_BASE_URL, AUTH_REFRESH_URL } from "./apiConfig";
+import { API_BASE_URL, AUTH_REFRESH_URL } from "./BaseURL";
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,

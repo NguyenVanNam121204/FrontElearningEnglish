@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import { ROUTE_PATHS } from "../Routes/Paths";
 
 /**
  * Custom hook for Google Login
  * Handles all Google OAuth login logic
+ * Builds OAuth URL from environment variables
  */
 export const useGoogleLogin = () => {
   const navigate = useNavigate();
@@ -12,20 +14,15 @@ export const useGoogleLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleGoogleLogin = useCallback(() => {
+  const handleGoogleLogin = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      // Get Google Client ID from environment variables
+      // Check if Google Client ID is configured
       const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-
       if (!googleClientId) {
-        setError(
-          "Google Login chưa được cấu hình. Vui lòng kiểm tra file .env và đảm bảo REACT_APP_GOOGLE_CLIENT_ID đã được thiết lập."
-        );
-        setLoading(false);
-        return;
+        throw new Error("Google Client ID chưa được cấu hình. Vui lòng kiểm tra file .env");
       }
 
       // Generate CSRF state token (backend requirement)
@@ -36,26 +33,25 @@ export const useGoogleLogin = () => {
       // Store state in sessionStorage for verification after redirect
       sessionStorage.setItem("google_oauth_state", state);
 
-      // Build Google OAuth 2.0 authorization URL
-      const redirectUri = `${window.location.origin}/auth/google/callback`;
-      const scope = "openid email profile";
-      const responseType = "code";
+      // Build redirect URI
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+      const redirectUri = `${frontendUrl}${ROUTE_PATHS.GOOGLE_CALLBACK}`;
 
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${encodeURIComponent(googleClientId)}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=${responseType}&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `state=${encodeURIComponent(state)}&` +
-        `access_type=offline&` +
-        `prompt=consent`;
+      // Build Google OAuth URL
+      const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      googleAuthUrl.searchParams.set("client_id", googleClientId);
+      googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      googleAuthUrl.searchParams.set("response_type", "code");
+      googleAuthUrl.searchParams.set("scope", "openid email profile");
+      googleAuthUrl.searchParams.set("state", state);
+      googleAuthUrl.searchParams.set("access_type", "offline");
+      googleAuthUrl.searchParams.set("prompt", "consent");
 
       // Redirect to Google OAuth consent screen
-      window.location.href = authUrl;
+      window.location.href = googleAuthUrl.toString();
     } catch (err) {
       console.error("Google login error:", err);
       const errorMessage =
-        err.response?.data?.message ||
         err.message ||
         "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
       setError(errorMessage);

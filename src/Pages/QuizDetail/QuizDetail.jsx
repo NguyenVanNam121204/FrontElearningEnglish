@@ -696,7 +696,8 @@ export default function QuizDetail() {
             // Log API endpoint
             const submitEndpoint = `/user/quiz-attempts/${currentAttemptId}/submit`;
             console.log("API Endpoint:", submitEndpoint);
-            console.log("Full URL will be:", `${process.env.REACT_APP_API_BASE_URL || ''}${submitEndpoint}`);
+            // Note: Full URL is built by axiosClient with baseURL
+            console.log("Submit endpoint:", submitEndpoint);
             console.log("Method: POST");
             console.log("Request body: (empty - POST with no body)");
             

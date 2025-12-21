@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import { ROUTE_PATHS } from "../Routes/Paths";
 
 /**
  * Custom hook for Facebook Login
  * Handles all Facebook OAuth login logic
+ * Builds OAuth URL from environment variables
  */
 export const useFacebookLogin = () => {
   const navigate = useNavigate();
@@ -12,20 +14,15 @@ export const useFacebookLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleFacebookLogin = useCallback(() => {
+  const handleFacebookLogin = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      // Facebook App ID from environment variables
+      // Check if Facebook App ID is configured
       const facebookAppId = process.env.REACT_APP_FACEBOOK_APP_ID;
-
       if (!facebookAppId) {
-        setError(
-          "Facebook Login chưa được cấu hình. Vui lòng kiểm tra file .env và đảm bảo REACT_APP_FACEBOOK_APP_ID đã được thiết lập."
-        );
-        setLoading(false);
-        return;
+        throw new Error("Facebook App ID chưa được cấu hình. Vui lòng kiểm tra file .env");
       }
 
       // Generate CSRF state token (backend requirement)
@@ -36,24 +33,23 @@ export const useFacebookLogin = () => {
       // Store state in sessionStorage for verification after redirect
       sessionStorage.setItem("facebook_oauth_state", state);
 
-      // Build Facebook OAuth 2.0 authorization URL
-      const redirectUri = `${window.location.origin}/auth/facebook/callback`;
-      const scope = "email,public_profile";
-      const responseType = "code";
+      // Build redirect URI
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+      const redirectUri = `${frontendUrl}${ROUTE_PATHS.FACEBOOK_CALLBACK}`;
 
-      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-        `client_id=${encodeURIComponent(facebookAppId)}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=${responseType}&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `state=${encodeURIComponent(state)}`;
+      // Build Facebook OAuth URL
+      const facebookAuthUrl = new URL("https://www.facebook.com/v18.0/dialog/oauth");
+      facebookAuthUrl.searchParams.set("client_id", facebookAppId);
+      facebookAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      facebookAuthUrl.searchParams.set("response_type", "code");
+      facebookAuthUrl.searchParams.set("scope", "email,public_profile");
+      facebookAuthUrl.searchParams.set("state", state);
 
       // Redirect to Facebook OAuth consent screen
-      window.location.href = authUrl;
+      window.location.href = facebookAuthUrl.toString();
     } catch (err) {
       console.error("Facebook login error:", err);
       const errorMessage =
-        err.response?.data?.message ||
         err.message ||
         "Đăng nhập bằng Facebook thất bại. Vui lòng thử lại.";
       setError(errorMessage);

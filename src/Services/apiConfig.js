@@ -3,9 +3,7 @@
  * Tất cả các endpoint API được định nghĩa tại đây
  */
 
-// Get API configuration from environment variables
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const AUTH_REFRESH_URL = process.env.REACT_APP_AUTH_REFRESH_URL;
+import { API_BASE_URL, AUTH_REFRESH_URL } from "./BaseURL";
 
 
 // Auth endpoints
@@ -19,6 +17,8 @@ export const API_ENDPOINTS = {
         UPDATE_PROFILE: "/auth/update/profile",
         UPDATE_AVATAR: "/auth/profile/avatar",
         CHANGE_PASSWORD: "/auth/change-password",
+        GOOGLE_AUTH_URL: "/auth/google-auth-url",
+        FACEBOOK_AUTH_URL: "/auth/facebook-auth-url",
         GOOGLE_LOGIN: "/auth/google-login",
         FACEBOOK_LOGIN: "/auth/facebook-login",
         VERIFY_EMAIL: "/auth/verify-email",
@@ -108,6 +108,7 @@ export const API_ENDPOINTS = {
     ESSAYS: {
         GET_BY_LESSON: (lessonId) => `/user/essays/lesson/${lessonId}`,
         GET_BY_ID: (essayId) => `/user/essays/${essayId}`,
+        GET_BY_ASSESSMENT: (assessmentId) => `/user/essays/assessment/${assessmentId}`,
     },
     // Essay Submissions
     ESSAY_SUBMISSIONS: {

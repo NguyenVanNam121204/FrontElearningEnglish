@@ -8,11 +8,11 @@
     width: 100%;
 }
 
-.input-field {
+/* Default: no password toggle - normal padding */
+.input-field-container .input-field {
     width: 100%;
     height: 52px;
     padding: 0 16px;
-    padding-right: 48px;
     border-radius: 14px;
     border: 1px solid #d1d5db;
     font-size: 15px;
@@ -22,6 +22,11 @@
     transition: 0.25s;
     font-family: inherit;
     text-align: left;
+}
+
+/* When password toggle is present - extra padding for icon */
+.input-field-container.has-password-toggle .input-field {
+    padding-right: 48px !important;
 }
 
 .input-field::placeholder {
