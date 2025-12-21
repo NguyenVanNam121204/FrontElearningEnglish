@@ -1,5 +1,5 @@
 // src/Components/Header/MainHeader.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Navbar, Nav } from "react-bootstrap";
 import "./Header.css";
@@ -16,13 +16,14 @@ export default function MainHeader() {
     return location.pathname === path;
   };
 
+
   return (
     <Navbar className="main-header" fixed="top" expand="lg">
       <Container fluid className="px-4">
         {/* LEFT: logo + brand */}
-        <Navbar.Brand 
-          className="main-header__left" 
-          onClick={() => navigate("/my-courses")} 
+        <Navbar.Brand
+          className="main-header__left"
+          onClick={() => navigate("/my-courses")}
           style={{ cursor: "pointer" }}
         >
           <img src={logo} alt="logo" className="main-header__logo" />
@@ -31,7 +32,7 @@ export default function MainHeader() {
 
         {/* Toggle for mobile */}
         <Navbar.Toggle aria-controls="main-navbar" className="border-0" />
-        
+
         <Navbar.Collapse id="main-navbar">
           {/* CENTER: navigation */}
           <Nav className="main-header__nav mx-auto">
@@ -40,7 +41,7 @@ export default function MainHeader() {
               className={`nav-item ${isActive("/home") ? "active" : ""}`}
             >
               <img src={iconHome} alt="Home" className="nav-icon" />
-              <span>Trang chủ</span>
+              <span className="nav-text">Trang chủ</span>
             </Nav.Item>
 
             <Nav.Item
@@ -48,7 +49,7 @@ export default function MainHeader() {
               className={`nav-item ${isActive("/my-courses") ? "active" : ""}`}
             >
               <img src={iconCourse} alt="Courses" className="nav-icon" />
-              <span>Khóa học của tôi</span>
+              <span className="nav-text">Khóa học của tôi</span>
             </Nav.Item>
 
             <Nav.Item
@@ -56,7 +57,7 @@ export default function MainHeader() {
               className={`nav-item ${isActive("/vocabulary-review") ? "active" : ""}`}
             >
               <img src={iconOntap} alt="Review" className="nav-icon" />
-              <span>Ôn tập từ vựng</span>
+              <span className="nav-text">Ôn tập từ vựng</span>
             </Nav.Item>
 
             <Nav.Item
@@ -64,7 +65,7 @@ export default function MainHeader() {
               className="nav-item"
             >
               <img src={iconSotay} alt="Notebook" className="nav-icon" />
-              <span>Sổ tay từ vựng</span>
+              <span className="nav-text">Sổ tay từ vựng</span>
             </Nav.Item>
           </Nav>
 

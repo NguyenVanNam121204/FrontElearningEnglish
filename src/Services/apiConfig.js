@@ -116,10 +116,17 @@ export const API_ENDPOINTS = {
         GET_BY_ESSAY: (essayId) => `/user/essay-submissions/essay/${essayId}`,
         GET_BY_ID: (submissionId) => `/user/essay-submissions/${submissionId}`,
         MY_SUBMISSIONS: "/user/essay-submissions/my-submissions",
+        GET_SUBMISSION_STATUS: (essayId) => `/user/essay-submissions/submission-status/essay/${essayId}`,
+        UPDATE: (submissionId) => `/user/essay-submissions/update/${submissionId}`,
+        DELETE: (submissionId) => `/user/essay-submissions/delete/${submissionId}`,
     },
     // Pronunciation Assessments
     PRONUNCIATION_ASSESSMENTS: {
-        ASSESS: "/user/pronunciation-assessments/assess",
+        ASSESS: "/user/pronunciation-assessments",
+        GET_BY_MODULE: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}`,
+        GET_BY_MODULE_PAGINATED: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/paginated`,
+        GET_ALL: "/user/pronunciation-assessments",
+        GET_MODULE_SUMMARY: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/summary`,
     },
     // Assessments
     ASSESSMENTS: {

@@ -84,7 +84,7 @@ export default function LessonDetail() {
         // Handle both camelCase and PascalCase
         let contentType = module.contentType || module.ContentType;
         const contentTypeName = (module.contentTypeName || module.ContentTypeName || module.name || module.Name || "").toLowerCase();
-        
+
         // Debug log
         console.log("Module clicked:", {
             moduleId,
@@ -131,11 +131,11 @@ export default function LessonDetail() {
             // Navigate to flashcard detail page
             console.log("Navigating to FlashCard page");
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/flashcards`);
-        } else if (contentType === 2 || contentType === 3 || 
-                   contentTypeName.includes("quiz") || 
-                   contentTypeName.includes("assignment") || 
-                   contentTypeName.includes("essay") ||
-                   contentTypeName.includes("test")) {
+        } else if (contentType === 2 || contentType === 3 ||
+            contentTypeName.includes("quiz") ||
+            contentTypeName.includes("assignment") ||
+            contentTypeName.includes("essay") ||
+            contentTypeName.includes("test")) {
             // Navigate to assignment detail page (Quiz=2, Assignment=3)
             console.log("Navigating to Assignment page");
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`);
@@ -148,6 +148,27 @@ export default function LessonDetail() {
             console.log("Default: Navigating to Assignment page");
             navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`);
         }
+    };
+
+    const handlePronunciationClick = (module) => {
+        const rawModuleId = module.moduleId || module.ModuleId;
+        if (!rawModuleId) {
+            console.error("Module ID is missing");
+            return;
+        }
+
+        // Parse moduleId thành số để đảm bảo đúng format
+        const moduleId = typeof rawModuleId === 'string' ? parseInt(rawModuleId) : rawModuleId;
+        if (!moduleId || isNaN(moduleId)) {
+            console.error("Invalid module ID:", rawModuleId);
+            return;
+        }
+
+        // Navigate to pronunciation page
+        const pronunciationPath = `/course/${courseId}/lesson/${lessonId}/module/${moduleId}/pronunciation`;
+        console.log("🔊 [LessonDetail] Navigating to Pronunciation page:", pronunciationPath);
+        console.log("🔊 [LessonDetail] Params:", { courseId, lessonId, moduleId });
+        navigate(pronunciationPath);
     };
 
     if (loading) {
@@ -210,6 +231,7 @@ export default function LessonDetail() {
                                         key={moduleId || index}
                                         module={module}
                                         onClick={() => handleModuleClick(module)}
+                                        onPronunciationClick={() => handlePronunciationClick(module)}
                                     />
                                 );
                             })

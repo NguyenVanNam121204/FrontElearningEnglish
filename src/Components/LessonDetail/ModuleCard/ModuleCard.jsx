@@ -1,14 +1,14 @@
 import React from "react";
 import { FaCheckCircle, FaPlay, FaMicrophone } from "react-icons/fa";
-import { 
-    FaBookOpen, 
-    FaFileAlt, 
+import {
+    FaBookOpen,
+    FaFileAlt,
     FaEdit,
     FaGraduationCap
 } from "react-icons/fa";
 import "./ModuleCard.css";
 
-export default function ModuleCard({ module, onClick }) {
+export default function ModuleCard({ module, onClick, onPronunciationClick }) {
     const {
         moduleId,
         name = "Module",
@@ -17,6 +17,7 @@ export default function ModuleCard({ module, onClick }) {
         isCompleted = false,
         description = "",
         startedAt = null,
+        isPronunciationCompleted = false, // Thông tin về pronunciation completion
     } = module || {};
 
     const finalName = name || "Module";
@@ -24,10 +25,14 @@ export default function ModuleCard({ module, onClick }) {
     const finalContentTypeName = contentTypeName || "Lecture";
     const finalIsCompleted = isCompleted;
     const finalDescription = description || "";
+    const finalIsPronunciationCompleted = isPronunciationCompleted || false;
 
     // Determine module status
     const isInProgress = !finalIsCompleted && startedAt !== null;
     const isNotStarted = !finalIsCompleted && startedAt === null;
+
+    // Check if this is a flashcard module
+    const isFlashCard = finalContentType === 4 || finalContentTypeName.toLowerCase().includes("flashcard");
 
     // Get icon and class name based on content type (1=Lecture, 2=Quiz, 3=Assignment, 4=FlashCard)
     const getIconConfig = (type, typeName) => {
@@ -43,7 +48,7 @@ export default function ModuleCard({ module, onClick }) {
         }
         return { icon: <FaBookOpen />, className: "lecture" };
     };
-    
+
     const iconConfig = getIconConfig(finalContentType, finalContentTypeName);
 
     // Get button text and action
@@ -71,8 +76,34 @@ export default function ModuleCard({ module, onClick }) {
 
     const buttonConfig = getButtonConfig();
 
+    // Handle card click - navigate to module content
+    const handleCardClick = (e) => {
+        // Don't navigate if clicking on pronunciation button or its children
+        if (e.target.closest('.pronunciation-btn')) {
+            return;
+        }
+        if (onClick) {
+            onClick();
+        }
+    };
+
+    // Handle pronunciation button click - navigate to pronunciation
+    const handlePronunciationClick = (e) => {
+        e.stopPropagation(); // Prevent card click
+        // Only allow click if flashcard is completed
+        if (!finalIsCompleted) {
+            return;
+        }
+        if (onPronunciationClick) {
+            onPronunciationClick();
+        }
+    };
+
     return (
-        <div className={`module-card ${finalIsCompleted ? "completed" : ""}`}>
+        <div
+            className={`module-card ${finalIsCompleted ? "completed" : ""}`}
+            onClick={handleCardClick}
+        >
             <div className="module-icon-wrapper">
                 <div className={`module-icon ${iconConfig.className}`}>
                     {iconConfig.icon}
@@ -85,19 +116,20 @@ export default function ModuleCard({ module, onClick }) {
                 )}
             </div>
             <div className="module-actions">
-                {(finalContentType === 4 || finalContentTypeName.toLowerCase().includes("flashcard")) && finalIsCompleted && (
-                    <button className="pronunciation-btn">
+                {isFlashCard && (
+                    <button
+                        className={`pronunciation-btn ${!finalIsCompleted
+                                ? "pronunciation-disabled"
+                                : finalIsPronunciationCompleted
+                                    ? "pronunciation-completed"
+                                    : "pronunciation-pending"
+                            }`}
+                        onClick={handlePronunciationClick}
+                    >
                         <FaMicrophone />
                         <span>pronunciation</span>
                     </button>
                 )}
-                <button
-                    className={`module-action-btn ${buttonConfig.className}`}
-                    onClick={onClick}
-                >
-                    {buttonConfig.icon}
-                    <span>{buttonConfig.text}</span>
-                </button>
             </div>
         </div>
     );
