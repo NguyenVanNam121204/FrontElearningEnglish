@@ -14,14 +14,8 @@
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 8px 12px;
     border-radius: 12px;
-    animation: fadeInLeft 0.8s ease-out, slideInGlow 1.5s ease-out 0.5s both, gradientTextShift 4s ease-in-out infinite;
-    background: linear-gradient(135deg, #41d6e3 0%, #d946ef 50%, #41d6e3 100%);
-    background-size: 300% 300%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 40px rgba(65, 214, 227, 0.5), 0 0 80px rgba(217, 70, 239, 0.3);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    animation: fadeInLeft 0.8s ease-out;
+    color: #1f2937;
 }
 
 @keyframes gradientTextShift {
@@ -35,9 +29,17 @@
 
 .my-courses-section h2::after {
     content: '⭐';
-    font-size: 20px;
+    font-size: 24px;
+    line-height: 1;
+    display: inline-block;
     animation: rotateStar 3s linear infinite, pulseStar 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 12px rgba(255, 193, 7, 0.7));
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+    color: #FFD700;
+    -webkit-text-fill-color: #FFD700 !important;
+    background: none !important;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
 }
 
 
@@ -93,7 +95,7 @@
 
 .my-courses-section h2:hover {
     transform: translateX(8px) scale(1.05);
-    animation: fadeInLeft 0.8s ease-out, slideInGlow 1.5s ease-out 0.5s both, gradientTextShift 4s ease-in-out infinite, hoverGlow 0.6s ease forwards;
+    color: #41d6e3;
 }
 
 @keyframes hoverGlow {
