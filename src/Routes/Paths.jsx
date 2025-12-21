@@ -39,6 +39,8 @@ export const ROUTE_PATHS = {
     `/course/${courseId}/lesson/${lessonId}/module/${moduleId}`,
   FLASHCARD_DETAIL: (courseId, lessonId, moduleId) => 
     `/course/${courseId}/lesson/${lessonId}/module/${moduleId}/flashcards`,
+  PRONUNCIATION_DETAIL: (courseId, lessonId, moduleId) => 
+    `/course/${courseId}/lesson/${lessonId}/module/${moduleId}/pronunciation`,
   ASSIGNMENT_DETAIL: (courseId, lessonId, moduleId) => 
     `/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`,
   

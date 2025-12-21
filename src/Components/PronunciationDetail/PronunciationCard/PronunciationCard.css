@@ -1,0 +1,139 @@
+.pronunciation-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    border-top: 4px solid #41d6e3;
+    margin-top: 2rem;
+}
+
+.pronunciation-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.pronunciation-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    text-align: center;
+}
+
+.word-display {
+    margin: 1rem 0;
+}
+
+.word-text {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.pronunciation-instruction {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+.pronunciation-instruction p {
+    margin: 0;
+}
+
+.pronunciation-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 2px solid #41d6e3;
+    color: #41d6e3;
+    background: white;
+    flex-shrink: 0;
+}
+
+.nav-button.prev-button {
+    border-color: #6b7280;
+    color: #6b7280;
+}
+
+.nav-button.prev-button:hover {
+    background: #6b7280;
+    color: white;
+    border-color: #6b7280;
+}
+
+.nav-button.next-button {
+    background: #41d6e3;
+    border-color: #41d6e3;
+    color: white;
+}
+
+.nav-button.next-button:hover {
+    background: #35b8c4;
+    border-color: #35b8c4;
+    color: white;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.playback-button {
+    background: #41d6e3;
+    border-color: #41d6e3;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.playback-button:hover {
+    background: #35b8c4;
+    border-color: #35b8c4;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .pronunciation-card {
+        padding: 1.5rem;
+    }
+
+    .word-text {
+        font-size: 2rem;
+    }
+
+    .pronunciation-card-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .pronunciation-card-actions .nav-button,
+    .pronunciation-card-actions .playback-button {
+        width: 100%;
+    }
+}

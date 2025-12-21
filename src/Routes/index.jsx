@@ -28,6 +28,7 @@ import AssignmentDetail from "../Pages/AssignmentDetail/AssignmentDetail";
 import QuizDetail from "../Pages/QuizDetail/QuizDetail";
 import QuizResults from "../Pages/QuizResults/QuizResults";
 import EssayDetail from "../Pages/EssayDetail/EssayDetail";
+import PronunciationDetail from "../Pages/PronunciationDetail/PronunciationDetail";
 
 /**
  * Application Routes
@@ -62,6 +63,7 @@ export default function AppRoutes() {
       {/* Course routes - specific routes first */}
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/lecture/:lectureId" element={<LectureDetail />} />
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/flashcards" element={<FlashCardDetail />} />
+      <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/pronunciation" element={<PronunciationDetail />} />
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/assignment" element={<AssignmentDetail />} />
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/quiz/:quizId/attempt/:attemptId/results" element={<QuizResults />} />
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/quiz/:quizId/attempt/:attemptId" element={<QuizDetail />} />

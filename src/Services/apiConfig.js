@@ -122,7 +122,11 @@ export const API_ENDPOINTS = {
     },
     // Pronunciation Assessments
     PRONUNCIATION_ASSESSMENTS: {
-        ASSESS: "/user/pronunciation-assessments/assess",
+        ASSESS: "/user/pronunciation-assessments",
+        GET_BY_MODULE: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}`,
+        GET_BY_MODULE_PAGINATED: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/paginated`,
+        GET_ALL: "/user/pronunciation-assessments",
+        GET_MODULE_SUMMARY: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/summary`,
     },
     // Assessments
     ASSESSMENTS: {

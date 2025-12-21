@@ -97,18 +97,43 @@
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    background: var(--color-border-light, #e5e7eb);
     border: none;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--color-text-secondary, #6b7280);
     cursor: pointer;
     transition: all 0.2s ease;
+    z-index: 10;
+    position: relative;
 }
 
-.pronunciation-btn:hover {
-    background: var(--color-border-medium, #d1d5db);
+/* Màu xám khi chưa hoàn thành flashcard - disabled */
+.pronunciation-btn.pronunciation-disabled {
+    background: var(--color-border-light, #e5e7eb);
+    color: var(--color-text-secondary, #6b7280);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Màu xanh cyan khi flashcard hoàn thành (chưa hoàn thành pronunciation) */
+.pronunciation-btn.pronunciation-pending {
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+    cursor: pointer;
+}
+
+.pronunciation-btn.pronunciation-pending:hover {
+    background: #35b8c4;
+}
+
+/* Màu xanh khi đã hoàn thành pronunciation */
+.pronunciation-btn.pronunciation-completed {
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+}
+
+.pronunciation-btn.pronunciation-completed:hover {
+    background: #35b8c4;
 }
 
 .pronunciation-btn svg {
@@ -163,4 +188,3 @@
         justify-content: center;
     }
 }
-
