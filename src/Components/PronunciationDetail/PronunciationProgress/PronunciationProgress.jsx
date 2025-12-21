@@ -44,10 +44,15 @@ export default function PronunciationProgress({ score, showScore, feedback }) {
                     <span className="score-number">
                         {displayScore ? Math.round(normalizedScore) : 0}
                     </span>
-                    <span className="score-feedback">{feedback || "Chưa tính điểm"}</span>
                 </div>
             </div>
+            {feedback && (
+                <div className="progress-feedback-wrapper">
+                    <span className="score-feedback">{feedback}</span>
+                </div>
+            )}
         </div>
     );
 }
+
 

@@ -56,8 +56,57 @@ export default function PronunciationDetail() {
                 const flashcardsResponse = await pronunciationService.getByModule(moduleId);
                 if (flashcardsResponse.data?.success && flashcardsResponse.data?.data) {
                     const flashcardsData = flashcardsResponse.data.data;
-                    setFlashcards(flashcardsData);
-                    if (flashcardsData.length > 0) {
+
+                    // Always fetch detailed information for each flashcard to get correct audioUrl
+                    // (Same as FlashCardDetail - pronunciation API may return incorrect audioUrl)
+                    const { flashcardService } = await import("../../Services/flashcardService");
+                    const flashcardsWithDetails = await Promise.all(
+                        flashcardsData.map(async (flashcard) => {
+                            try {
+                                const flashCardId = flashcard.flashCardId || flashcard.FlashCardId;
+                                
+                                // Always fetch detailed flashcard to get correct audioUrl
+                                const detailResponse = await flashcardService.getFlashcardById(flashCardId);
+                                if (
+                                    detailResponse.data?.success &&
+                                    detailResponse.data?.data
+                                ) {
+                                    // Merge detail data with list data - prioritize detail API audioUrl
+                                    return {
+                                        ...flashcard,
+                                        audioUrl:
+                                            detailResponse.data.data.audioUrl ||
+                                            detailResponse.data.data.AudioUrl ||
+                                            flashcard.audioUrl ||
+                                            flashcard.AudioUrl,
+                                        imageUrl:
+                                            detailResponse.data.data.imageUrl ||
+                                            detailResponse.data.data.ImageUrl ||
+                                            flashcard.imageUrl ||
+                                            flashcard.ImageUrl,
+                                        pronunciation:
+                                            detailResponse.data.data.pronunciation ||
+                                            flashcard.pronunciation ||
+                                            flashcard.Phonetic,
+                                        phonetic:
+                                            detailResponse.data.data.pronunciation ||
+                                            flashcard.phonetic ||
+                                            flashcard.Phonetic,
+                                    };
+                                }
+                                return flashcard;
+                            } catch (err) {
+                                console.error(
+                                    `Error fetching detail for flashcard ${flashcard.flashCardId || flashcard.FlashCardId}:`,
+                                    err
+                                );
+                                return flashcard; // Return original if detail fetch fails
+                            }
+                        })
+                    );
+
+                    setFlashcards(flashcardsWithDetails);
+                    if (flashcardsWithDetails.length > 0) {
                         setCurrentIndex(0);
                     }
                 } else {

@@ -22,28 +22,53 @@ export default function PronunciationCard({
     const [isProcessing, setIsProcessing] = useState(false);
     const [assessmentResult, setAssessmentResult] = useState(null);
     const [audioBlob, setAudioBlob] = useState(null);
-    const [audioUrl, setAudioUrl] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [recordedAudioUrl, setRecordedAudioUrl] = useState(null);
+    const [isPlayingRecorded, setIsPlayingRecorded] = useState(false);
+    const [isPlayingReference, setIsPlayingReference] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
-    const audioPlayerRef = useRef(null);
+    const recordedAudioPlayerRef = useRef(null);
+    const referenceAudioPlayerRef = useRef(null);
+    const referenceBlobUrlRef = useRef(null);
 
     const word = flashcard?.word || flashcard?.Word || "";
+    const definition = flashcard?.definition || flashcard?.Definition || "";
+    const phonetic = flashcard?.phonetic || flashcard?.Phonetic || "";
+    const audioUrl = flashcard?.audioUrl || flashcard?.AudioUrl || "";
     const flashCardId = flashcard?.flashCardId || flashcard?.FlashCardId;
+    
+    // Debug: Log audioUrl to check if it's being passed correctly
+    React.useEffect(() => {
+        console.log("🔊 [PronunciationCard] Flashcard data:", {
+            word,
+            audioUrl,
+            flashCardId,
+            audioUrlFromFlashcard: flashcard?.audioUrl || flashcard?.AudioUrl,
+            fullFlashcard: flashcard
+        });
+    }, [flashCardId, audioUrl]);
     const progress = flashcard?.progress || flashcard?.Progress;
     const bestScore = progress?.bestScore || progress?.BestScore || 0;
     const hasPracticed = progress?.hasPracticed || progress?.HasPracticed || false;
 
     // Reset state when flashcard changes
     React.useEffect(() => {
-        // Cleanup previous audio
-        if (audioUrl) {
-            URL.revokeObjectURL(audioUrl);
-            setAudioUrl(null);
+        // Cleanup previous recorded audio
+        if (recordedAudioUrl) {
+            URL.revokeObjectURL(recordedAudioUrl);
+            setRecordedAudioUrl(null);
         }
-        if (audioPlayerRef.current) {
-            audioPlayerRef.current.pause();
-            audioPlayerRef.current = null;
+        if (recordedAudioPlayerRef.current) {
+            recordedAudioPlayerRef.current.pause();
+            recordedAudioPlayerRef.current = null;
+        }
+        if (referenceAudioPlayerRef.current) {
+            referenceAudioPlayerRef.current.pause();
+            referenceAudioPlayerRef.current = null;
+        }
+        if (referenceBlobUrlRef.current) {
+            URL.revokeObjectURL(referenceBlobUrlRef.current);
+            referenceBlobUrlRef.current = null;
         }
 
         // Reset states
@@ -51,7 +76,8 @@ export default function PronunciationCard({
         setAssessmentResult(null);
         setIsRecording(false);
         setIsProcessing(false);
-        setIsPlaying(false);
+        setIsPlayingRecorded(false);
+        setIsPlayingReference(false);
         audioChunksRef.current = [];
     }, [flashCardId]);
 
@@ -74,7 +100,7 @@ export default function PronunciationCard({
 
                 // Create audio URL for playback
                 const url = URL.createObjectURL(audioBlob);
-                setAudioUrl(url);
+                setRecordedAudioUrl(url);
 
                 // Calculate duration from audio blob
                 const audio = new Audio(url);
@@ -251,67 +277,167 @@ export default function PronunciationCard({
         }
     };
 
-    const handlePlayRecording = () => {
-        if (!audioUrl || !audioBlob) return;
+    const handlePlayRecordedAudio = () => {
+        if (!recordedAudioUrl || !audioBlob) return;
 
-        if (audioPlayerRef.current) {
-            audioPlayerRef.current.pause();
-            audioPlayerRef.current = null;
+        if (recordedAudioPlayerRef.current) {
+            recordedAudioPlayerRef.current.pause();
+            recordedAudioPlayerRef.current = null;
         }
 
-        const audio = new Audio(audioUrl);
-        audioPlayerRef.current = audio;
+        const audio = new Audio(recordedAudioUrl);
+        recordedAudioPlayerRef.current = audio;
 
         audio.onended = () => {
-            setIsPlaying(false);
-            audioPlayerRef.current = null;
+            setIsPlayingRecorded(false);
+            recordedAudioPlayerRef.current = null;
         };
 
         audio.onerror = () => {
-            setIsPlaying(false);
-            audioPlayerRef.current = null;
+            setIsPlayingRecorded(false);
+            recordedAudioPlayerRef.current = null;
             alert("Không thể phát lại bản ghi âm");
         };
 
         audio.play().then(() => {
-            setIsPlaying(true);
+            setIsPlayingRecorded(true);
         }).catch((err) => {
-            console.error("Error playing audio:", err);
-            setIsPlaying(false);
+            console.error("Error playing recorded audio:", err);
+            setIsPlayingRecorded(false);
         });
     };
 
-    const handleStopPlayback = () => {
-        if (audioPlayerRef.current) {
-            audioPlayerRef.current.pause();
-            audioPlayerRef.current.currentTime = 0;
-            audioPlayerRef.current = null;
-            setIsPlaying(false);
+    const handleStopRecordedPlayback = () => {
+        if (recordedAudioPlayerRef.current) {
+            recordedAudioPlayerRef.current.pause();
+            recordedAudioPlayerRef.current.currentTime = 0;
+            recordedAudioPlayerRef.current = null;
+            setIsPlayingRecorded(false);
         }
     };
 
-    // Cleanup audio URL on unmount
+    const handlePlayReferenceAudio = async (e) => {
+        if (e) {
+            e.stopPropagation();
+        }
+        if (!audioUrl) {
+            console.warn("No audio URL provided");
+            return;
+        }
+
+        try {
+            // Stop any currently playing audio
+            if (referenceAudioPlayerRef.current) {
+                referenceAudioPlayerRef.current.pause();
+                referenceAudioPlayerRef.current.src = "";
+                referenceAudioPlayerRef.current = null;
+            }
+            
+            // Clean up previous blob URL if exists
+            if (referenceBlobUrlRef.current) {
+                URL.revokeObjectURL(referenceBlobUrlRef.current);
+                referenceBlobUrlRef.current = null;
+            }
+            
+            // Try fetching audio as blob first (to bypass CORS if possible) - EXACT SAME AS FLASHCARD
+            try {
+                const response = await fetch(audioUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'audio/mpeg, audio/*',
+                    },
+                    mode: 'cors', // Try CORS first
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                referenceBlobUrlRef.current = blobUrl;
+                const audio = new Audio(blobUrl);
+                
+                audio.onended = () => {
+                    setIsPlayingReference(false);
+                    referenceAudioPlayerRef.current = null;
+                    // Clean up blob URL when audio ends
+                    if (referenceBlobUrlRef.current) {
+                        URL.revokeObjectURL(referenceBlobUrlRef.current);
+                        referenceBlobUrlRef.current = null;
+                    }
+                };
+                
+                referenceAudioPlayerRef.current = audio;
+                await audio.play();
+                setIsPlayingReference(true);
+                console.log("Reference audio playing successfully via blob");
+            } catch (fetchError) {
+                // If fetch fails, try direct audio URL - EXACT SAME AS FLASHCARD
+                console.log("Fetch failed, trying direct audio URL:", fetchError);
+                const audio = new Audio(audioUrl);
+                referenceAudioPlayerRef.current = audio;
+                await audio.play();
+                setIsPlayingReference(true);
+                console.log("Reference audio playing successfully via direct URL");
+            }
+        } catch (err) {
+            console.error("Error playing reference audio:", err);
+            console.error("Error name:", err.name);
+            console.error("Error message:", err.message);
+            console.error("Audio URL:", audioUrl);
+            setIsPlayingReference(false);
+            
+            // Clean up on error
+            if (referenceAudioPlayerRef.current) {
+                referenceAudioPlayerRef.current.pause();
+                referenceAudioPlayerRef.current = null;
+            }
+            if (referenceBlobUrlRef.current) {
+                URL.revokeObjectURL(referenceBlobUrlRef.current);
+                referenceBlobUrlRef.current = null;
+            }
+            
+            // Silent fail - don't show alert as it might be annoying - EXACT SAME AS FLASHCARD
+            // User can check console for details
+        }
+    };
+
+    const handleStopReferencePlayback = () => {
+        if (referenceAudioPlayerRef.current) {
+            referenceAudioPlayerRef.current.pause();
+            referenceAudioPlayerRef.current.currentTime = 0;
+            referenceAudioPlayerRef.current = null;
+            setIsPlayingReference(false);
+        }
+        // Clean up blob URL if exists
+        if (referenceBlobUrlRef.current) {
+            URL.revokeObjectURL(referenceBlobUrlRef.current);
+            referenceBlobUrlRef.current = null;
+        }
+    };
+
+    // Cleanup audio URLs on unmount
     React.useEffect(() => {
         return () => {
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
+            if (recordedAudioUrl) {
+                URL.revokeObjectURL(recordedAudioUrl);
             }
-            if (audioPlayerRef.current) {
-                audioPlayerRef.current.pause();
-                audioPlayerRef.current = null;
+            if (recordedAudioPlayerRef.current) {
+                recordedAudioPlayerRef.current.pause();
+                recordedAudioPlayerRef.current = null;
+            }
+            if (referenceAudioPlayerRef.current) {
+                referenceAudioPlayerRef.current.pause();
+                referenceAudioPlayerRef.current = null;
+            }
+            if (referenceBlobUrlRef.current) {
+                URL.revokeObjectURL(referenceBlobUrlRef.current);
+                referenceBlobUrlRef.current = null;
             }
         };
-    }, [audioUrl]);
+    }, [recordedAudioUrl]);
 
-    const getFeedbackText = (score) => {
-        if (!score || score === 0) return "Chưa tính điểm";
-        if (score >= 90) return "Tuyệt vời!";
-        if (score >= 80) return "Tốt!";
-        if (score >= 70) return "Khá tốt!";
-        if (score >= 60) return "Cần cải thiện";
-        if (score >= 50) return "Cần luyện tập thêm";
-        return "Phát âm ngu quá";
-    };
 
     // Get pronunciation score from result - Backend returns PascalCase
     const getPronunciationScore = () => {
@@ -382,15 +508,23 @@ export default function PronunciationCard({
                     <PronunciationProgress
                         score={pronunciationScore}
                         showScore={showScore}
-                        feedback={assessmentResult
-                            ? getFeedbackText(pronunciationScore)
-                            : hasPracticed
-                                ? `Điểm tốt nhất: ${Math.round(bestScore)}`
-                                : "Chưa tính điểm"}
+                        feedback={
+                            assessmentResult
+                                ? (assessmentResult.Feedback || assessmentResult.feedback || "Chưa tính điểm")
+                                : hasPracticed
+                                    ? `Điểm tốt nhất: ${Math.round(bestScore)}`
+                                    : "Chưa tính điểm"
+                        }
                     />
 
                     <div className="word-display">
                         <h2 className="word-text">{word}</h2>
+                        {phonetic && (
+                            <p className="phonetic-text">{phonetic}</p>
+                        )}
+                        {definition && (
+                            <p className="definition-text">{definition}</p>
+                        )}
                     </div>
 
                     <div className="pronunciation-instruction">
@@ -418,14 +552,25 @@ export default function PronunciationCard({
                     </Button>
                 )}
 
-                {audioBlob && audioUrl && (
+                {audioBlob && recordedAudioUrl && (
                     <Button
                         variant="outline-primary"
                         className="playback-button"
-                        onClick={isPlaying ? handleStopPlayback : handlePlayRecording}
+                        onClick={isPlayingRecorded ? handleStopRecordedPlayback : handlePlayRecordedAudio}
                     >
                         <FaVolumeUp className="me-2" />
-                        {isPlaying ? "Dừng" : "Nghe lại"}
+                        {isPlayingRecorded ? "Dừng" : "Nghe lại"}
+                    </Button>
+                )}
+
+                {assessmentResult && audioUrl && audioUrl.trim() !== "" && (
+                    <Button
+                        variant="outline-success"
+                        className="reference-audio-button"
+                        onClick={isPlayingReference ? handleStopReferencePlayback : handlePlayReferenceAudio}
+                    >
+                        <FaVolumeUp className="me-2" />
+                        {isPlayingReference ? "Dừng" : "Nghe phát âm chuẩn"}
                     </Button>
                 )}
 
