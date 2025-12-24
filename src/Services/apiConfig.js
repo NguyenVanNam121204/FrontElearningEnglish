@@ -156,6 +156,15 @@ export const API_ENDPOINTS = {
         GET_STUDENT_DETAIL: (courseId, studentId) => `/courses/${courseId}/students/${studentId}`,
         ADD_STUDENT: (courseId) => `/courses/${courseId}/students`,
         REMOVE_STUDENT: (courseId, studentId) => `/courses/${courseId}/students/${studentId}`,
+        // Lesson endpoints
+        CREATE_LESSON: "/lessons/teacher/add",
+        GET_LESSONS_BY_COURSE: (courseId) => `/lessons/course/${courseId}`,
+        UPDATE_LESSON: (lessonId) => `/lessons/update/${lessonId}`,
+        GET_LESSON_BY_ID: (lessonId) => `/lessons/get/${lessonId}`,
+        // Module endpoints
+        CREATE_MODULE: "/modules",
+        GET_MODULES_BY_LESSON: (lessonId) => `/modules/lesson/${lessonId}`,
+        GET_MODULE_BY_ID: (moduleId) => `/modules/${moduleId}`,
     },
 };
 

@@ -2,20 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { fileService } from "../../../Services/fileService";
 import { teacherService } from "../../../Services/teacherService";
+import { useAuth } from "../../../Context/AuthContext";
 import { FaFileUpload, FaTimes } from "react-icons/fa";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import "./CreateCourseModal.css";
+import "./CreateLessonModal.css";
 
-const COURSE_IMAGE_BUCKET = "courses"; // Bucket name for course images
+const LESSON_IMAGE_BUCKET = "lessons"; // Bucket name for lesson images
 
-export default function CreateCourseModal({ show, onClose, onSuccess, courseData, isUpdateMode = false }) {
+export default function CreateLessonModal({ show, onClose, onSuccess, courseId, lessonData, isUpdateMode = false }) {
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
 
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type] = useState(2); // Mặc định type = 2 (khóa học của giáo viên)
 
   // Image upload state
   const [selectedImage, setSelectedImage] = useState(null);
@@ -33,18 +32,18 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
 
   // Pre-fill form when in update mode
   useEffect(() => {
-    if (show && isUpdateMode && courseData) {
-      const courseTitle = courseData.title || courseData.Title || "";
-      const courseDescription = courseData.description || courseData.Description || "";
-      const courseImageUrl = courseData.imageUrl || courseData.ImageUrl || null;
+    if (show && isUpdateMode && lessonData) {
+      const lessonTitle = lessonData.title || lessonData.Title || "";
+      const lessonDescription = lessonData.description || lessonData.Description || "";
+      const lessonImageUrl = lessonData.imageUrl || lessonData.ImageUrl || null;
       
-      setTitle(courseTitle);
-      setDescription(courseDescription);
-      setExistingImageUrl(courseImageUrl);
+      setTitle(lessonTitle);
+      setDescription(lessonDescription || "");
+      setExistingImageUrl(lessonImageUrl);
       
       // Set preview to existing image if available
-      if (courseImageUrl) {
-        setImagePreview(courseImageUrl);
+      if (lessonImageUrl) {
+        setImagePreview(lessonImageUrl);
       } else {
         setImagePreview(null);
       }
@@ -54,7 +53,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
       setImageTempKey(null);
       setImageType(null);
     }
-  }, [show, isUpdateMode, courseData]);
+  }, [show, isUpdateMode, lessonData]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -106,7 +105,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
       // Upload file to temp storage
       const uploadResponse = await fileService.uploadTempFile(
         file,
-        COURSE_IMAGE_BUCKET,
+        LESSON_IMAGE_BUCKET,
         "temp"
       );
 
@@ -114,8 +113,6 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
 
       if (uploadResponse.data?.success && uploadResponse.data?.data) {
         const resultData = uploadResponse.data.data;
-        // Backend trả về PascalCase: TempKey, ImageUrl, ImageType
-        // Axios có thể convert thành camelCase: tempKey, imageUrl, imageType
         const tempKey = resultData.TempKey || resultData.tempKey;
         const imageTypeValue = resultData.ImageType || resultData.imageType || file.type;
 
@@ -184,8 +181,6 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
       const submitData = {
         title: title.trim(),
         description: description.trim(),
-        type: type,
-        maxStudent: 0, // Backend will auto-set based on package
       };
 
       // Chỉ thêm imageTempKey và imageType nếu có upload ảnh mới
@@ -195,14 +190,15 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
       }
 
       let response;
-      if (isUpdateMode && courseData) {
-        const courseId = courseData.courseId || courseData.CourseId;
-        if (!courseId) {
-          throw new Error("Không tìm thấy ID khóa học");
+      if (isUpdateMode && lessonData) {
+        const lessonId = lessonData.lessonId || lessonData.LessonId;
+        if (!lessonId) {
+          throw new Error("Không tìm thấy ID bài học");
         }
-        response = await teacherService.updateCourse(courseId, submitData);
+        response = await teacherService.updateLesson(lessonId, submitData);
       } else {
-        response = await teacherService.createCourse(submitData);
+        submitData.courseId = parseInt(courseId);
+        response = await teacherService.createLesson(submitData);
       }
 
       if (response.data?.success) {
@@ -210,11 +206,11 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
         onSuccess?.();
         onClose();
       } else {
-        throw new Error(response.data?.message || (isUpdateMode ? "Cập nhật khóa học thất bại" : "Tạo khóa học thất bại"));
+        throw new Error(response.data?.message || (isUpdateMode ? "Cập nhật bài học thất bại" : "Tạo bài học thất bại"));
       }
     } catch (error) {
-      console.error(`Error ${isUpdateMode ? "updating" : "creating"} course:`, error);
-      const errorMessage = error.response?.data?.message || error.message || (isUpdateMode ? "Có lỗi xảy ra khi cập nhật khóa học" : "Có lỗi xảy ra khi tạo khóa học");
+      console.error(`Error ${isUpdateMode ? "updating" : "creating"} lesson:`, error);
+      const errorMessage = error.response?.data?.message || error.message || (isUpdateMode ? "Có lỗi xảy ra khi cập nhật bài học" : "Có lỗi xảy ra khi tạo bài học");
       setErrors({ ...errors, submit: errorMessage });
     } finally {
       setSubmitting(false);
@@ -224,16 +220,9 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
   const isFormValid = title.trim() && description.trim();
 
   return (
-    <Modal 
-      show={show} 
-      onHide={onClose} 
-      centered 
-      className="create-course-modal" 
-      dialogClassName="create-course-modal-dialog"
-      style={{ zIndex: 1050 }}
-    >
+    <Modal show={show} onHide={onClose} centered className="create-lesson-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{isUpdateMode ? "Cập nhật lớp học" : "Tạo lớp học"}</Modal.Title>
+        <Modal.Title>{isUpdateMode ? "Cập nhật bài học" : "Thêm bài học"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <form onSubmit={handleSubmit}>
@@ -248,18 +237,35 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
                 setTitle(e.target.value);
                 setErrors({ ...errors, title: null });
               }}
-              placeholder="Nhập tiêu đề khóa học"
+              placeholder="Nhập tiêu đề bài học"
             />
             {errors.title && <div className="invalid-feedback">{errors.title}</div>}
             <div className="form-hint">*Bắt buộc</div>
           </div>
 
-          {/* Ảnh khóa học */}
+          {/* Mô tả */}
           <div className="form-group">
-            <label className="form-label">Ảnh khóa học</label>
+            <label className="form-label required">Mô tả</label>
+            <textarea
+              className={`form-control ${errors.description ? "is-invalid" : ""}`}
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setErrors({ ...errors, description: null });
+              }}
+              placeholder="Nhập mô tả bài học"
+              rows={4}
+            />
+            {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+            <div className="form-hint">*Bắt buộc</div>
+          </div>
+
+          {/* Ảnh bài học */}
+          <div className="form-group">
+            <label className="form-label">Ảnh bài học</label>
             {imagePreview ? (
               <div className="image-preview-wrapper">
-                <img src={imagePreview} alt="Ảnh xem trước khóa học" className="image-preview" />
+                <img src={imagePreview} alt="Ảnh xem trước bài học" className="image-preview" />
                 <button
                   type="button"
                   className="remove-image-btn"
@@ -290,50 +296,6 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
             {errors.image && <div className="error-message">{errors.image}</div>}
             <div className="form-hint">Không bắt buộc{isUpdateMode && existingImageUrl && !imageTempKey ? " (giữ nguyên ảnh hiện tại nếu không chọn ảnh mới)" : ""}</div>
           </div>
-
-          {/* Mô tả - Markdown Editor */}
-          <div className="form-group">
-            <label className="form-label required">Mô tả (Markdown)</label>
-            <div className="markdown-editor-container">
-              <div className="markdown-editor-left">
-                <textarea
-                  className={`markdown-textarea ${errors.description ? "is-invalid" : ""}`}
-                  value={description}
-                  onChange={(e) => {
-                    setDescription(e.target.value);
-                    setErrors({ ...errors, description: null });
-                  }}
-                  placeholder={`Viết mô tả khóa học bằng Markdown
-
-Ví dụ:
-# Giới thiệu
-
-Đây là một khóa học tuyệt vời...
-
-- Điểm 1
-- Điểm 2`}
-                />
-              </div>
-              <div className="markdown-editor-right">
-                <div className="markdown-preview">
-                  {description.trim() ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {description}
-                    </ReactMarkdown>
-                  ) : (
-                    <div className="markdown-preview-empty">
-                      <p>Xem trước mô tả sẽ hiển thị ở đây...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-            <div className="form-hint">*Bắt buộc. Sử dụng Markdown để định dạng văn bản</div>
-          </div>
-
-          {/* Type (hidden, mặc định 2) */}
-          <input type="hidden" value={type} />
 
           {/* Submit error */}
           {errors.submit && (
