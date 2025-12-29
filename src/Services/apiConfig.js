@@ -51,8 +51,8 @@ export const API_ENDPOINTS = {
     },
     // Teacher Packages
     TEACHER_PACKAGES: {
-        GET_ALL: "/user/teacher-packages/teacher-packages",
-        GET_BY_ID: (id) => `/user/teacher-packages/teacher-packages/${id}`,
+        GET_ALL: "/user/teacher-packages",
+        GET_BY_ID: (id) => `/user/teacher-packages/${id}`,
     },
     // Modules
     MODULES: {
