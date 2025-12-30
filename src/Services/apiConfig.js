@@ -168,6 +168,63 @@ export const API_ENDPOINTS = {
         GET_MY_STREAK: "/user/streaks",
         CHECKIN: "/user/streaks/checkin",
     },
+    // Teacher endpoints
+    TEACHER: {
+        // Course endpoints
+        GET_MY_COURSES: "/teacher/courses/my-courses",
+        GET_COURSE_DETAIL: (courseId) => `/teacher/courses/${courseId}`,
+        CREATE_COURSE: "/teacher/courses",
+        UPDATE_COURSE: (courseId) => `/teacher/courses/${courseId}`,
+        // Student management endpoints
+        GET_COURSE_STUDENTS: (courseId) => `/teacher/courses/${courseId}/students`,
+        GET_STUDENT_DETAIL: (courseId, studentId) => `/teacher/courses/${courseId}/students/${studentId}`,
+        ADD_STUDENT: (courseId) => `/teacher/courses/${courseId}/students`,
+        REMOVE_STUDENT: (courseId, studentId) => `/teacher/courses/${courseId}/students/${studentId}`,
+        // Lesson endpoints
+        CREATE_LESSON: "/teacher/lessons",
+        GET_LESSONS_BY_COURSE: (courseId) => `/teacher/lessons/course/${courseId}`,
+        GET_LESSON_BY_ID: (lessonId) => `/teacher/lessons/${lessonId}`,
+        UPDATE_LESSON: (lessonId) => `/teacher/lessons/${lessonId}`,
+        // Module endpoints
+        CREATE_MODULE: "/teacher/modules",
+        GET_MODULES_BY_LESSON: (lessonId) => `/teacher/modules/lesson/${lessonId}`,
+        GET_MODULE_BY_ID: (moduleId) => `/teacher/modules/${moduleId}`,
+        UPDATE_MODULE: (moduleId) => `/teacher/modules/${moduleId}`,
+        // Lecture endpoints
+        CREATE_LECTURE: "/teacher/lectures",
+        BULK_CREATE_LECTURES: "/teacher/lectures/bulk",
+        GET_LECTURE_BY_ID: (lectureId) => `/teacher/lectures/${lectureId}`,
+        GET_LECTURES_BY_MODULE: (moduleId) => `/teacher/lectures/module/${moduleId}`,
+        GET_LECTURE_TREE: (moduleId) => `/teacher/lectures/module/${moduleId}/tree`,
+        UPDATE_LECTURE: (lectureId) => `/teacher/lectures/${lectureId}`,
+        DELETE_LECTURE: (lectureId) => `/teacher/lectures/${lectureId}`,
+        REORDER_LECTURES: "/teacher/lectures/reorder",
+        // FlashCard endpoints
+        CREATE_FLASHCARD: "/teacher/flashcards",
+        BULK_CREATE_FLASHCARDS: "/teacher/flashcards/bulk",
+        GET_FLASHCARD_BY_ID: (flashcardId) => `/teacher/flashcards/${flashcardId}`,
+        GET_FLASHCARDS_BY_MODULE: (moduleId) => `/teacher/flashcards/module/${moduleId}`,
+        UPDATE_FLASHCARD: (flashcardId) => `/teacher/flashcards/${flashcardId}`,
+        DELETE_FLASHCARD: (flashcardId) => `/teacher/flashcards/${flashcardId}`,
+        // Assessment endpoints
+        CREATE_ASSESSMENT: "/teacher/assessments",
+        GET_ASSESSMENT_BY_ID: (assessmentId) => `/teacher/assessments/${assessmentId}`,
+        GET_ASSESSMENTS_BY_MODULE: (moduleId) => `/teacher/assessments/module/${moduleId}`,
+        UPDATE_ASSESSMENT: (assessmentId) => `/teacher/assessments/${assessmentId}`,
+        DELETE_ASSESSMENT: (assessmentId) => `/teacher/assessments/${assessmentId}`,
+        // Quiz endpoints
+        CREATE_QUIZ: "/teacher/quizzes",
+        GET_QUIZ_BY_ID: (quizId) => `/teacher/quizzes/${quizId}`,
+        GET_QUIZZES_BY_ASSESSMENT: (assessmentId) => `/teacher/quizzes/assessment/${assessmentId}`,
+        UPDATE_QUIZ: (quizId) => `/teacher/quizzes/${quizId}`,
+        DELETE_QUIZ: (quizId) => `/teacher/quizzes/${quizId}`,
+        // Essay endpoints
+        CREATE_ESSAY: "/teacher/essays",
+        GET_ESSAY_BY_ID: (essayId) => `/teacher/essays/${essayId}`,
+        GET_ESSAYS_BY_ASSESSMENT: (assessmentId) => `/teacher/essays/assessment/${assessmentId}`,
+        UPDATE_ESSAY: (essayId) => `/teacher/essays/${essayId}`,
+        DELETE_ESSAY: (essayId) => `/teacher/essays/${essayId}`,
+    },
 };
 
 export { API_BASE_URL, AUTH_REFRESH_URL };
