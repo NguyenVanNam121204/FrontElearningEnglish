@@ -38,6 +38,12 @@ import CourseManagement from "../Pages/Teacher/CourseManagement";
 import TeacherCourseDetail from "../Pages/Teacher/TeacherCourseDetail";
 import TeacherLessonDetail from "../Pages/Teacher/TeacherLessonDetail";
 import TeacherStudentManagement from "../Pages/Teacher/TeacherStudentManagement";
+import TeacherModuleLectureDetail from "../Pages/Teacher/TeacherModuleLectureDetail/TeacherModuleLectureDetail";
+import TeacherModuleFlashCardDetail from "../Pages/Teacher/TeacherModuleFlashCardDetail/TeacherModuleFlashCardDetail";
+import TeacherModuleAssessmentDetail from "../Pages/Teacher/TeacherModuleAssessmentDetail/TeacherModuleAssessmentDetail";
+import TeacherAssessmentTypeSelection from "../Pages/Teacher/TeacherAssessmentTypeSelection/TeacherAssessmentTypeSelection";
+import TeacherModuleQuizDetail from "../Pages/Teacher/TeacherModuleQuizDetail/TeacherModuleQuizDetail";
+import TeacherModuleEssayDetail from "../Pages/Teacher/TeacherModuleEssayDetail/TeacherModuleEssayDetail";
 
 /**
  * Application Routes
@@ -95,6 +101,12 @@ export default function AppRoutes() {
       <Route path="/teacher/course-management" element={<CourseManagement />} />
       <Route path="/teacher/course/:courseId/students" element={<TeacherStudentManagement />} />
       <Route path="/teacher/course/:courseId/lesson/:lessonId" element={<TeacherLessonDetail />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/create-lecture" element={<TeacherModuleLectureDetail />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/create-flashcard" element={<TeacherModuleFlashCardDetail />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/create-assessment" element={<TeacherModuleAssessmentDetail />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/select-type" element={<TeacherAssessmentTypeSelection />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/create-essay" element={<TeacherModuleEssayDetail />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/create-quiz" element={<TeacherModuleQuizDetail />} />
       <Route path="/teacher/course/:courseId" element={<TeacherCourseDetail />} />
     </Routes>
   );

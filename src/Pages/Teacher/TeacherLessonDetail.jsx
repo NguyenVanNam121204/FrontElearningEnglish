@@ -24,7 +24,11 @@ export default function TeacherLessonDetail() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCreateModuleModal, setShowCreateModuleModal] = useState(false);
+  const [showUpdateModuleModal, setShowUpdateModuleModal] = useState(false);
+  const [moduleToUpdate, setModuleToUpdate] = useState(null);
+  const [loadingModuleDetail, setLoadingModuleDetail] = useState(false);
   const [showModuleSuccessModal, setShowModuleSuccessModal] = useState(false);
+  const [showUpdateModuleSuccessModal, setShowUpdateModuleSuccessModal] = useState(false);
 
   const isTeacher = roles.includes("Teacher") || user?.teacherSubscription?.isTeacher === true;
 
@@ -75,7 +79,33 @@ export default function TeacherLessonDetail() {
       const response = await teacherService.getModulesByLesson(lessonId);
       if (response.data?.success && response.data?.data) {
         const modulesData = response.data.data;
-        setModules(Array.isArray(modulesData) ? modulesData : []);
+        const modulesList = Array.isArray(modulesData) ? modulesData : [];
+        
+        // Fetch imageUrl cho từng module từ API chi tiết
+        const modulesWithImages = await Promise.all(
+          modulesList.map(async (module) => {
+            try {
+              const moduleId = module.moduleId || module.ModuleId;
+              const detailResponse = await teacherService.getModuleById(moduleId);
+              
+              if (detailResponse.data?.success && detailResponse.data?.data) {
+                const detailData = detailResponse.data.data;
+                // Merge imageUrl từ detail vào module
+                return {
+                  ...module,
+                  imageUrl: detailData.imageUrl || detailData.ImageUrl || module.imageUrl || module.ImageUrl,
+                  ImageUrl: detailData.imageUrl || detailData.ImageUrl || module.imageUrl || module.ImageUrl,
+                };
+              }
+              return module;
+            } catch (err) {
+              console.error(`Error fetching module ${module.moduleId || module.ModuleId} detail:`, err);
+              return module;
+            }
+          })
+        );
+        
+        setModules(modulesWithImages);
       } else {
         setModules([]);
       }
@@ -202,6 +232,53 @@ export default function TeacherLessonDetail() {
                     
                     const displayContentType = contentTypeName || contentTypeMap[contentTypeValue] || contentTypeValue || "Unknown";
                     
+                    // Determine which button to show based on contentType
+                    const getCreateButton = () => {
+                      const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
+                      
+                      if (contentTypeNum === 1) {
+                        // Lecture
+                        return (
+                          <button 
+                            className="module-create-btn lecture-btn"
+                            onClick={() => {
+                              navigate(ROUTE_PATHS.TEACHER_CREATE_LECTURE(courseId, lessonId, moduleId));
+                            }}
+                          >
+                            <FaPlus className="add-icon" />
+                            Tạo Lecture
+                          </button>
+                        );
+                      } else if (contentTypeNum === 4) {
+                        // FlashCard
+                        return (
+                          <button 
+                            className="module-create-btn flashcard-btn"
+                            onClick={() => {
+                              navigate(ROUTE_PATHS.TEACHER_CREATE_FLASHCARD(courseId, lessonId, moduleId));
+                            }}
+                          >
+                            <FaPlus className="add-icon" />
+                            Tạo Flashcard
+                          </button>
+                        );
+                      } else if (contentTypeNum === 3) {
+                        // Assignment/Assessment
+                        return (
+                          <button 
+                            className="module-create-btn assessment-btn"
+                            onClick={() => {
+                              navigate(ROUTE_PATHS.TEACHER_CREATE_ASSESSMENT(courseId, lessonId, moduleId));
+                            }}
+                          >
+                            <FaPlus className="add-icon" />
+                            Tạo Assessment
+                          </button>
+                        );
+                      }
+                      return null;
+                    };
+                    
                     return (
                       <div key={moduleId || index} className="module-item">
                         <div className="module-item-content">
@@ -214,6 +291,41 @@ export default function TeacherLessonDetail() {
                             <span className="module-name">{moduleName}</span>
                             <span className="module-type">{displayContentType}</span>
                           </div>
+                        </div>
+                        <div className="module-actions">
+                          <button 
+                            className="module-update-btn"
+                            onClick={async () => {
+                              try {
+                                setLoadingModuleDetail(true);
+                                // Gọi API lấy chi tiết module để có đầy đủ thông tin (bao gồm imageUrl)
+                                const moduleId = module.moduleId || module.ModuleId;
+                                const response = await teacherService.getModuleById(moduleId);
+                                
+                                if (response.data?.success && response.data?.data) {
+                                  setModuleToUpdate(response.data.data);
+                                  setShowUpdateModuleModal(true);
+                                } else {
+                                  // Fallback: sử dụng dữ liệu từ list nếu API fail
+                                  console.warn("Failed to fetch module detail, using list data");
+                                  setModuleToUpdate(module);
+                                  setShowUpdateModuleModal(true);
+                                }
+                              } catch (error) {
+                                console.error("Error fetching module detail:", error);
+                                // Fallback: sử dụng dữ liệu từ list
+                                setModuleToUpdate(module);
+                                setShowUpdateModuleModal(true);
+                              } finally {
+                                setLoadingModuleDetail(false);
+                              }
+                            }}
+                            title="Cập nhật module"
+                            disabled={loadingModuleDetail}
+                          >
+                            {loadingModuleDetail ? "Đang tải..." : "Cập nhật"}
+                          </button>
+                          {getCreateButton()}
                         </div>
                       </div>
                     );
@@ -264,6 +376,34 @@ export default function TeacherLessonDetail() {
         onClose={() => setShowCreateModuleModal(false)}
         onSuccess={handleCreateModuleSuccess}
         lessonId={lessonId}
+      />
+
+      {/* Update Module Modal */}
+      <CreateModuleModal
+        show={showUpdateModuleModal}
+        onClose={() => {
+          setShowUpdateModuleModal(false);
+          setModuleToUpdate(null);
+        }}
+        onSuccess={() => {
+          setShowUpdateModuleModal(false);
+          setModuleToUpdate(null);
+          setShowUpdateModuleSuccessModal(true);
+          fetchModules();
+        }}
+        lessonId={lessonId}
+        moduleData={moduleToUpdate}
+        isUpdateMode={true}
+      />
+
+      {/* Success Modal for Module Update */}
+      <SuccessModal
+        isOpen={showUpdateModuleSuccessModal}
+        onClose={() => setShowUpdateModuleSuccessModal(false)}
+        title="Cập nhật module thành công"
+        message="Module của bạn đã được cập nhật thành công!"
+        autoClose={true}
+        autoCloseDelay={1500}
       />
 
       {/* Success Modal for Module Creation */}

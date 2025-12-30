@@ -61,5 +61,12 @@ export const ROUTE_PATHS = {
   TEACHER_ACCOUNT_MANAGEMENT: "/teacher/account-management",
   TEACHER_COURSE_MANAGEMENT: "/teacher/course-management",
   TEACHER_STUDENT_MANAGEMENT: (courseId) => `/teacher/course/${courseId}/students`,
+  TEACHER_LESSON_DETAIL: (courseId, lessonId) => `/teacher/course/${courseId}/lesson/${lessonId}`,
+  TEACHER_CREATE_LECTURE: (courseId, lessonId, moduleId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/create-lecture`,
+  TEACHER_CREATE_FLASHCARD: (courseId, lessonId, moduleId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/create-flashcard`,
+  TEACHER_CREATE_ASSESSMENT: (courseId, lessonId, moduleId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/create-assessment`,
+  TEACHER_ASSESSMENT_TYPE_SELECTION: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/select-type`,
+  TEACHER_CREATE_ESSAY: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/create-essay`,
+  TEACHER_CREATE_QUIZ: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/create-quiz`,
 };
 

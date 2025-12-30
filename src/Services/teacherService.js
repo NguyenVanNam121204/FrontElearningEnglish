@@ -46,5 +46,8 @@ export const teacherService = {
     
     // Get module by id
     getModuleById: (moduleId) => axiosClient.get(API_ENDPOINTS.TEACHER.GET_MODULE_BY_ID(moduleId)),
+    
+    // Update module
+    updateModule: (moduleId, data) => axiosClient.put(API_ENDPOINTS.TEACHER.UPDATE_MODULE(moduleId), data),
 };
 

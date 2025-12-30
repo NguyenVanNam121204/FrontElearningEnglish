@@ -18,7 +18,7 @@ const MODULE_TYPES = [
   { value: 6, label: "Reading" },
 ];
 
-export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }) {
+export default function CreateModuleModal({ show, onClose, onSuccess, lessonId, moduleData, isUpdateMode = false }) {
   const { user } = useAuth();
   const fileInputRef = useRef(null);
 
@@ -33,12 +33,40 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
   const [imageTempKey, setImageTempKey] = useState(null);
   const [imageType, setImageType] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [existingImageUrl, setExistingImageUrl] = useState(null);
 
   // Validation errors
   const [errors, setErrors] = useState({});
 
   // Submit state
   const [submitting, setSubmitting] = useState(false);
+
+  // Pre-fill form when in update mode
+  useEffect(() => {
+    if (show && isUpdateMode && moduleData) {
+      const moduleName = moduleData.name || moduleData.Name || "";
+      const moduleDescription = moduleData.description || moduleData.Description || "";
+      const moduleContentType = moduleData.contentType || moduleData.ContentType || "";
+      const moduleImageUrl = moduleData.imageUrl || moduleData.ImageUrl || null;
+      
+      setName(moduleName);
+      setDescription(moduleDescription || "");
+      setContentType(moduleContentType.toString());
+      setExistingImageUrl(moduleImageUrl);
+      
+      // Set preview to existing image if available
+      if (moduleImageUrl) {
+        setImagePreview(moduleImageUrl);
+      } else {
+        setImagePreview(null);
+      }
+      
+      // Reset new upload fields
+      setSelectedImage(null);
+      setImageTempKey(null);
+      setImageType(null);
+    }
+  }, [show, isUpdateMode, moduleData]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -50,6 +78,7 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
       setImagePreview(null);
       setImageTempKey(null);
       setImageType(null);
+      setExistingImageUrl(null);
       setErrors({});
     }
   }, [show]);
@@ -166,32 +195,55 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
     setSubmitting(true);
 
     try {
-      const moduleData = {
-        lessonId: parseInt(lessonId),
-        name: name.trim(),
-        description: description.trim(),
-        contentType: parseInt(contentType),
-        orderIndex: 0, // Backend will auto-assign if 0
-      };
+      let response;
+      
+      if (isUpdateMode && moduleData) {
+        const moduleId = moduleData.moduleId || moduleData.ModuleId;
+        const updateData = {
+          name: name.trim(),
+          description: description.trim(),
+        };
 
-      // Chỉ thêm imageTempKey và imageType nếu có upload ảnh
-      if (imageTempKey && imageType) {
-        moduleData.imageTempKey = imageTempKey;
-        moduleData.imageType = imageType;
+        // Chỉ thêm contentType nếu có giá trị
+        if (contentType) {
+          updateData.contentType = parseInt(contentType);
+        }
+
+        // Chỉ thêm imageTempKey và imageType nếu có upload ảnh mới
+        if (imageTempKey && imageType) {
+          updateData.imageTempKey = imageTempKey;
+          updateData.imageType = imageType;
+        }
+
+        response = await teacherService.updateModule(moduleId, updateData);
+      } else {
+        const createData = {
+          lessonId: parseInt(lessonId),
+          name: name.trim(),
+          description: description.trim(),
+          contentType: parseInt(contentType),
+          orderIndex: 0, // Backend will auto-assign if 0
+        };
+
+        // Chỉ thêm imageTempKey và imageType nếu có upload ảnh
+        if (imageTempKey && imageType) {
+          createData.imageTempKey = imageTempKey;
+          createData.imageType = imageType;
+        }
+
+        response = await teacherService.createModule(createData);
       }
-
-      const response = await teacherService.createModule(moduleData);
 
       if (response.data?.success) {
         // Success
         onSuccess?.();
         onClose();
       } else {
-        throw new Error(response.data?.message || "Tạo module thất bại");
+        throw new Error(response.data?.message || (isUpdateMode ? "Cập nhật module thất bại" : "Tạo module thất bại"));
       }
     } catch (error) {
-      console.error("Error creating module:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Có lỗi xảy ra khi tạo module";
+      console.error(`Error ${isUpdateMode ? "updating" : "creating"} module:`, error);
+      const errorMessage = error.response?.data?.message || error.message || `Có lỗi xảy ra khi ${isUpdateMode ? "cập nhật" : "tạo"} module`;
       setErrors({ ...errors, submit: errorMessage });
     } finally {
       setSubmitting(false);
@@ -210,7 +262,7 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
       style={{ zIndex: 1050 }}
     >
       <Modal.Header closeButton>
-        <Modal.Title>Thêm Module</Modal.Title>
+        <Modal.Title>{isUpdateMode ? "Cập nhật Module" : "Thêm Module"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <form onSubmit={handleSubmit}>
@@ -299,12 +351,14 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
                 />
                 <FaFileUpload className="upload-icon" />
                 <span className="upload-text">
-                  {uploadingImage ? "Đang upload..." : "Chọn ảnh"}
+                  {uploadingImage ? "Đang upload..." : isUpdateMode ? "Thay đổi ảnh" : "Chọn ảnh"}
                 </span>
               </div>
             )}
             {errors.image && <div className="error-message">{errors.image}</div>}
-            <div className="form-hint">Không bắt buộc</div>
+            <div className="form-hint">
+              Không bắt buộc{isUpdateMode && existingImageUrl && !imageTempKey ? " (giữ nguyên ảnh hiện tại nếu không chọn ảnh mới)" : ""}
+            </div>
           </div>
 
           {/* Submit error */}
@@ -322,7 +376,7 @@ export default function CreateModuleModal({ show, onClose, onSuccess, lessonId }
           onClick={handleSubmit}
           disabled={!isFormValid || submitting || uploadingImage}
         >
-          {submitting ? "Đang tạo..." : "Tạo"}
+          {submitting ? (isUpdateMode ? "Đang cập nhật..." : "Đang tạo...") : (isUpdateMode ? "Cập nhật" : "Tạo")}
         </Button>
       </Modal.Footer>
     </Modal>
