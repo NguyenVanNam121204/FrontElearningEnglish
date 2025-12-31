@@ -252,7 +252,39 @@ export default function TeacherLessonDetail() {
     navigate(ROUTE_PATHS.TEACHER_EDIT_FLASHCARD(courseId, lessonId, moduleId, flashcardId));
   };
 
-  // Handle edit assessment
+  // Handle click on assessment card - navigate to quiz editor if has quiz
+  const handleAssessmentClick = async (assessment) => {
+    const assessmentId = assessment.assessmentId || assessment.AssessmentId;
+    const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
+
+    if (!assessmentId) {
+      return;
+    }
+
+    // Check if assessment has a quiz
+    const typeInfo = assessmentTypes[assessmentId] || { hasQuiz: false, hasEssay: false };
+
+    if (typeInfo.hasQuiz) {
+      try {
+        const quizRes = await quizService.getTeacherQuizzesByAssessment(assessmentId);
+
+        if (quizRes.data?.success && quizRes.data?.data && quizRes.data.data.length > 0) {
+          const quiz = quizRes.data.data[0];
+          const quizId = quiz.quizId || quiz.QuizId;
+
+          if (quizId) {
+            // Navigate to quiz editor
+            navigate(ROUTE_PATHS.TEACHER_EDIT_QUIZ(courseId, lessonId, moduleId, assessmentId, quizId));
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching quiz:", error);
+      }
+    }
+  };
+
+  // Handle edit assessment - only for editing assessment title/details
   const handleEditAssessment = (assessment) => {
     // Backend returns AssessmentId (PascalCase)
     const assessmentId = assessment.assessmentId || assessment.AssessmentId;
@@ -264,6 +296,7 @@ export default function TeacherLessonDetail() {
       return;
     }
 
+    // Navigate to assessment edit page (for editing title/details)
     navigate(ROUTE_PATHS.TEACHER_EDIT_ASSESSMENT(courseId, lessonId, moduleId, assessmentId));
   };
 
@@ -463,7 +496,12 @@ export default function TeacherLessonDetail() {
                               const typeInfo = assessmentTypes[assessmentId] || { hasQuiz: false, hasEssay: false };
 
                               return (
-                                <div key={assessmentId || index} className="content-item">
+                                <div
+                                  key={assessmentId || index}
+                                  className="content-item"
+                                  style={{ cursor: typeInfo.hasQuiz ? 'pointer' : 'default' }}
+                                  onClick={() => typeInfo.hasQuiz && handleAssessmentClick(item)}
+                                >
                                   <div className="content-item-info">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                                       <h4 className="content-item-title" style={{ margin: 0 }}>{title}</h4>
@@ -528,8 +566,11 @@ export default function TeacherLessonDetail() {
                                   </div>
                                   <button
                                     className="content-item-edit-btn"
-                                    onClick={() => handleEditAssessment(item)}
-                                    title="Sửa"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditAssessment(item);
+                                    }}
+                                    title="Sửa tiêu đề"
                                   >
                                     <FaEdit className="edit-icon" />
                                     Sửa
@@ -630,49 +671,9 @@ export default function TeacherLessonDetail() {
                       const displayContentType = contentTypeName || contentTypeMap[contentTypeValue] || contentTypeValue || "Unknown";
 
                       // Determine which button to show based on contentType
+                      // All create buttons removed from modules list view
+                      // They will still appear in module content view when module is selected
                       const getCreateButton = () => {
-                        const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
-
-                        if (contentTypeNum === 1) {
-                          // Lecture
-                          return (
-                            <button
-                              className="module-create-btn lecture-btn"
-                              onClick={() => {
-                                navigate(ROUTE_PATHS.TEACHER_CREATE_LECTURE(courseId, lessonId, moduleId));
-                              }}
-                            >
-                              <FaPlus className="add-icon" />
-                              Tạo Lecture
-                            </button>
-                          );
-                        } else if (contentTypeNum === 4) {
-                          // FlashCard
-                          return (
-                            <button
-                              className="module-create-btn flashcard-btn"
-                              onClick={() => {
-                                navigate(ROUTE_PATHS.TEACHER_CREATE_FLASHCARD(courseId, lessonId, moduleId));
-                              }}
-                            >
-                              <FaPlus className="add-icon" />
-                              Tạo Flashcard
-                            </button>
-                          );
-                        } else if (contentTypeNum === 3) {
-                          // Assignment/Assessment
-                          return (
-                            <button
-                              className="module-create-btn assessment-btn"
-                              onClick={() => {
-                                navigate(ROUTE_PATHS.TEACHER_CREATE_ASSESSMENT(courseId, lessonId, moduleId));
-                              }}
-                            >
-                              <FaPlus className="add-icon" />
-                              Tạo Assessment
-                            </button>
-                          );
-                        }
                         return null;
                       };
 
