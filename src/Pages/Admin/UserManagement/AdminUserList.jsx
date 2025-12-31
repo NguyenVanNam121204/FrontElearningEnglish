@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { MdSearch, MdSchool, MdPerson, MdBlock, MdCheckCircle, MdArrowUpward, MdClose } from "react-icons/md";
+import { MdSearch, MdSchool, MdPerson, MdBlock, MdCheckCircle, MdArrowUpward, MdVisibility } from "react-icons/md";
 import { adminService } from "../../../Services/adminService";
+import UserDetailModal from "./UserDetailModal";
 
 export default function AdminUserList() {
-  const [activeTab, setActiveTab] = useState("all"); // 'all', 'teachers', 'blocked'
+  const [activeTab, setActiveTab] = useState("all"); 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,8 +13,9 @@ export default function AdminUserList() {
 
   // Modal State
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [selectedUserForUpgrade, setSelectedUserForUpgrade] = useState(null);
-  const [upgradePackageId, setUpgradePackageId] = useState(1); // Default Package ID
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [upgradePackageId, setUpgradePackageId] = useState(1); 
 
   useEffect(() => {
     fetchUserStats();
@@ -66,6 +68,11 @@ export default function AdminUserList() {
     }
   };
 
+  const handleViewDetail = (user) => {
+    setSelectedUser(user);
+    setShowDetailModal(true);
+  };
+
   const handleToggleStatus = async (user) => {
     const isBlocked = user.status === 'Inactive' || user.status === 0;
     const action = isBlocked ? 'Unblock' : 'Block';
@@ -78,24 +85,24 @@ export default function AdminUserList() {
       } else {
         await adminService.blockUser(user.userId || user.id);
       }
-      fetchUsers(); // Refresh list
-      fetchUserStats(); // Refresh stats (vì có thể ảnh hưởng số lượng active)
+      fetchUsers(); 
+      fetchUserStats();
     } catch (error) {
       alert(`Failed to ${action} user`);
     }
   };
 
   const openUpgradeModal = (user) => {
-    setSelectedUserForUpgrade(user);
+    setSelectedUser(user);
     setShowUpgradeModal(true);
   };
 
   const handleUpgradeUser = async () => {
-    if (!selectedUserForUpgrade) return;
+    if (!selectedUser) return;
     
     try {
       await adminService.upgradeUserToTeacher({
-        email: selectedUserForUpgrade.email,
+        email: selectedUser.email,
         teacherPackageId: parseInt(upgradePackageId)
       });
       alert("User upgraded to Teacher successfully!");
@@ -153,8 +160,8 @@ export default function AdminUserList() {
                  <MdArrowUpward size={24}/>
               </div>
               <div>
-                 <h4 className="mb-0 fw-bold">{stats.newUsersToday || 0}</h4>
-                 <small className="text-muted">New Users Today</small>
+                 <h4 className="mb-0 fw-bold">{stats.newUsersLast30Days || stats.newUsersToday || 0}</h4>
+                 <small className="text-muted">New Users (30d)</small>
               </div>
            </div>
         </div>
@@ -233,16 +240,25 @@ export default function AdminUserList() {
                                 </div>
                             </td>
                             <td>
-                                <span className={`badge ${user.role === 'Teacher' ? 'bg-primary' : 'bg-secondary'}`}>
-                                    {user.role || 'Student'}
+                                <span className={`badge ${user.roles?.includes('Teacher') ? 'bg-primary' : 'bg-secondary'}`}>
+                                    {user.roles?.[0] || 'Student'}
                                 </span>
                             </td>
                             <td>{user.phoneNumber || 'N/A'}</td>
                             <td>{getStatusBadge(user.status)}</td>
                             <td>
                                 <div className="d-flex gap-2">
-                                    {/* Upgrade Button (Only for Students) */}
-                                    {user.role !== 'Teacher' && (
+                                    {/* View Detail Button */}
+                                    <button 
+                                        className="btn btn-sm btn-light text-info" 
+                                        title="View Detail"
+                                        onClick={() => handleViewDetail(user)}
+                                    >
+                                        <MdVisibility />
+                                    </button>
+
+                                    {/* Upgrade Button (Only if NOT Teacher) */}
+                                    {!user.roles?.includes('Teacher') && (
                                         <button 
                                             className="btn btn-sm btn-light text-primary" 
                                             title="Upgrade to Teacher"
@@ -275,7 +291,7 @@ export default function AdminUserList() {
 
       {/* UPGRADE MODAL */}
       {showUpgradeModal && (
-        <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050}}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -283,7 +299,7 @@ export default function AdminUserList() {
                 <button type="button" className="btn-close" onClick={() => setShowUpgradeModal(false)}></button>
               </div>
               <div className="modal-body">
-                <p>You are upgrading user <strong>{selectedUserForUpgrade?.email}</strong>.</p>
+                <p>You are upgrading user <strong>{selectedUser?.email}</strong>.</p>
                 <div className="mb-3">
                   <label className="form-label">Select Teacher Package</label>
                   <select 
@@ -305,6 +321,13 @@ export default function AdminUserList() {
           </div>
         </div>
       )}
+
+      {/* DETAIL MODAL */}
+      <UserDetailModal 
+        show={showDetailModal} 
+        onClose={() => setShowDetailModal(false)} 
+        user={selectedUser} 
+      />
     </div>
   );
 }

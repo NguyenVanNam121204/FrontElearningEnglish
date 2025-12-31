@@ -24,6 +24,10 @@ export const adminService = {
   deleteCourse: (id) => {
     return axiosClient.delete(API_ENDPOINTS.ADMIN.COURSES.DELETE(id));
   },
+  getCourseContent: (courseId) => {
+      // Sử dụng endpoint public để lấy cấu trúc bài học
+      return axiosClient.get(`/user/courses/${courseId}`); 
+  },
 
   // --- USER MANAGEMENT ---
   getAllUsers: (params) => {

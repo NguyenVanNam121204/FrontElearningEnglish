@@ -39,6 +39,7 @@ import PronunciationDetail from "../Pages/PronunciationDetail/PronunciationDetai
 import AdminLayout from "../Layouts/AdminLayout/AdminLayout";
 import AdminDashboard from "../Pages/Admin/Dashboard/AdminDashboard";
 import AdminCourseList from "../Pages/Admin/CourseManagement/AdminCourseList";
+import AdminCourseDetail from "../Pages/Admin/CourseManagement/Detail/AdminCourseDetail";
 import AdminUserList from "../Pages/Admin/UserManagement/AdminUserList";
 
 /**
@@ -96,6 +97,7 @@ export default function AppRoutes() {
         <Route index element={<AdminDashboard />} /> {/* Default to Dashboard */}
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="courses" element={<AdminCourseList />} />
+        <Route path="courses/:courseId" element={<AdminCourseDetail />} />
         <Route path="users" element={<AdminUserList />} />
         {/* Placeholder for Finance */}
         <Route path="finance" element={<div className="p-4">Finance Module Coming Soon</div>} />

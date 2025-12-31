@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MdAdd, MdFilterList, MdSearch, MdEdit, MdDelete, MdVisibility, MdMenuBook } from "react-icons/md";
 import { adminService } from "../../../Services/adminService";
 import CourseFormModal from "./CourseFormModal";
 
 export default function AdminCourseList() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -211,7 +213,13 @@ export default function AdminCourseList() {
                         <td>{course.studentCount}</td>
                         <td>
                         <div className="d-flex gap-2">
-                            <button className="btn btn-sm btn-light text-primary" title="View"><MdVisibility /></button>
+                            <button 
+                                className="btn btn-sm btn-light text-primary" 
+                                title="View Details"
+                                onClick={() => navigate(`/admin/courses/${course.courseId}`)}
+                            >
+                                <MdVisibility />
+                            </button>
                             <button 
                                 className="btn btn-sm btn-light text-secondary" 
                                 title="Edit"
