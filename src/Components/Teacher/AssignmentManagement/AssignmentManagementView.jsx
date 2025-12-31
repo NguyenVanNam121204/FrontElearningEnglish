@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col } from "react-bootstrap";
-import { FaArrowLeft } from "react-icons/fa";
-import CreateButtons from "./CreateButtons/CreateButtons";
+import { Container, Row, Col, Button } from "react-bootstrap";
+import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import QuizList from "./QuizList/QuizList";
 import EssayList from "./EssayList/EssayList";
 import CreateQuizModal from "./CreateQuizModal/CreateQuizModal";
@@ -478,13 +477,16 @@ export default function AssignmentManagementView({
                     )}
                 </div>
 
-                <CreateButtons
-                    onCreateQuiz={handleCreateQuiz}
-                    onCreateEssay={handleCreateEssay}
-                />
-
                 <Row>
                     <Col lg={6}>
+                        <Button
+                            className="create-action-btn create-quiz-btn"
+                            onClick={handleCreateQuiz}
+                            size="lg"
+                        >
+                            <FaPlus className="me-2" />
+                            Tạo Quiz mới
+                        </Button>
                         <QuizList
                             quizzes={quizzes}
                             onEdit={(quiz) => handleEditQuiz(quiz, true)}
@@ -493,6 +495,14 @@ export default function AssignmentManagementView({
                         />
                     </Col>
                     <Col lg={6}>
+                        <Button
+                            className="create-action-btn create-essay-btn"
+                            onClick={handleCreateEssay}
+                            size="lg"
+                        >
+                            <FaPlus className="me-2" />
+                            Tạo Essay mới
+                        </Button>
                         <EssayList
                             essays={essays}
                             onEdit={(essay) => handleEditEssay(essay, true)}
@@ -537,4 +547,5 @@ export default function AssignmentManagementView({
         </div>
     );
 }
+
 
