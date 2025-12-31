@@ -79,10 +79,13 @@ export default function TeacherQuizEditor() {
 
             // Fetch quiz
             if (quizId) {
-                const quizRes = await quizService.getTeacherQuizById(quizId);
+                const parsedQuizId = parseInt(quizId);
+                const quizRes = await quizService.getTeacherQuizById(parsedQuizId);
                 if (quizRes.data?.success && quizRes.data?.data) {
                     setQuiz(quizRes.data.data);
-                    await ensureDefaultSectionAndGroup(quizRes.data.data.quizId || quizRes.data.data.QuizId);
+                    // Use the ID from the response to be sure, or the parsed ID from params
+                    const confirmedQuizId = quizRes.data.data.quizId || quizRes.data.data.QuizId || parsedQuizId;
+                    await ensureDefaultSectionAndGroup(confirmedQuizId);
                 } else {
                     setError("Không thể tải thông tin quiz");
                 }
@@ -103,17 +106,25 @@ export default function TeacherQuizEditor() {
             if (!currentQuizId || currentQuizId <= 0) {
                 throw new Error("Quiz ID không hợp lệ");
             }
+            
+            const quizIdInt = parseInt(currentQuizId);
 
             // Fetch sections
-            const sectionsRes = await quizService.getQuizSectionsByQuiz(currentQuizId);
+            const sectionsRes = await quizService.getQuizSectionsByQuiz(quizIdInt);
             let section = null;
 
-            if (sectionsRes.data?.success && sectionsRes.data?.data && sectionsRes.data.data.length > 0) {
-                section = sectionsRes.data.data[0];
-            } else {
+            if (sectionsRes.data?.success && sectionsRes.data?.data) {
+                const sectionsData = Array.isArray(sectionsRes.data.data) ? sectionsRes.data.data : [];
+                if (sectionsData.length > 0) {
+                    section = sectionsData[0];
+                }
+            }
+            
+            if (!section) {
                 // Create default section
+                console.log("Creating default section for quiz:", quizIdInt);
                 const createSectionRes = await quizService.createQuizSection({
-                    quizId: currentQuizId,
+                    quizId: quizIdInt,
                     title: "Default Section",
                     description: "Default section for quiz questions",
                 });
@@ -134,19 +145,27 @@ export default function TeacherQuizEditor() {
             if (!sectionId || sectionId <= 0) {
                 throw new Error("Section ID không hợp lệ");
             }
+            
+            const sectionIdInt = parseInt(sectionId);
 
             setDefaultSection(section);
 
             // Fetch groups
-            const groupsRes = await quizService.getQuizGroupsBySection(sectionId);
+            const groupsRes = await quizService.getQuizGroupsBySection(sectionIdInt);
             let group = null;
 
-            if (groupsRes.data?.success && groupsRes.data?.data && groupsRes.data.data.length > 0) {
-                group = groupsRes.data.data[0];
-            } else {
+            if (groupsRes.data?.success && groupsRes.data?.data) {
+                const groupsData = Array.isArray(groupsRes.data.data) ? groupsRes.data.data : [];
+                if (groupsData.length > 0) {
+                    group = groupsData[0];
+                }
+            }
+            
+            if (!group) {
                 // Create default group
+                console.log("Creating default group for section:", sectionIdInt);
                 const createGroupRes = await quizService.createQuizGroup({
-                    quizSectionId: sectionId,
+                    quizSectionId: sectionIdInt,
                     name: "Default Group",
                     title: "Default Group",
                     description: "Default group for quiz questions",
@@ -173,7 +192,7 @@ export default function TeacherQuizEditor() {
             setDefaultGroup(group);
 
             // Fetch questions only after section and group are confirmed
-            await loadQuestions(groupId);
+            await loadQuestions(parseInt(groupId));
         } catch (err) {
             console.error("Error ensuring default section/group:", err);
             setError(err.message || "Có lỗi xảy ra khi tải cấu trúc quiz");
