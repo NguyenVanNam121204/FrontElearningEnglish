@@ -3,7 +3,7 @@ import { Card } from "react-bootstrap";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "./EssayList.css";
 
-export default function EssayList({ essays, onEdit, onDelete }) {
+export default function EssayList({ essays, onEdit, onCardClick, onDelete }) {
     if (!essays || essays.length === 0) {
         return (
             <div className="essay-list-container">
@@ -32,7 +32,7 @@ export default function EssayList({ essays, onEdit, onDelete }) {
                         <Card
                             key={essayId || assessmentId}
                             className="essay-card"
-                            onClick={() => onEdit(essay)}
+                            onClick={() => onCardClick && onCardClick(essay)}
                             style={{ cursor: 'pointer' }}
                         >
                             <Card.Body>

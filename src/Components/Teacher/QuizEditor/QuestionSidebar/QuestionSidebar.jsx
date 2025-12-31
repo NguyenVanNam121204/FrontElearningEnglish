@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./QuestionSidebar.css";
-import { FaPlus, FaEllipsisV } from "react-icons/fa";
+import { FaPlus, FaEllipsisV, FaList } from "react-icons/fa";
 import { getQuestionTypeLabel } from "../../../../Utils/questionTypeUtils";
 
 export default function QuestionSidebar({
@@ -8,6 +8,7 @@ export default function QuestionSidebar({
   selectedQuestion,
   onQuestionSelect,
   onCreateQuestion,
+  onBulkCreateQuestions,
   onDeleteQuestion,
 }) {
   const [showMenuForQuestion, setShowMenuForQuestion] = useState(null);
@@ -32,13 +33,22 @@ export default function QuestionSidebar({
     <div className="question-sidebar">
       <div className="sidebar-header">
         <h3 className="sidebar-title">Tạo Câu hỏi Quiz</h3>
-        <button
-          className="btn-add-question-header"
-          onClick={onCreateQuestion}
-          title="Thêm câu hỏi"
-        >
-          <FaPlus />
-        </button>
+        <div className="header-buttons">
+          <button
+            className="btn-add-question-header"
+            onClick={onBulkCreateQuestions}
+            title="Tạo nhiều câu hỏi"
+          >
+            <FaList />
+          </button>
+          <button
+            className="btn-add-question-header"
+            onClick={onCreateQuestion}
+            title="Thêm câu hỏi"
+          >
+            <FaPlus />
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-questions-count">

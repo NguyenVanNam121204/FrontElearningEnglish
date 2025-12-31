@@ -6,6 +6,8 @@ import QuizList from "./QuizList/QuizList";
 import EssayList from "./EssayList/EssayList";
 import CreateQuizModal from "./CreateQuizModal/CreateQuizModal";
 import EditQuizModal from "./EditQuizModal/EditQuizModal";
+import CreateEssayModal from "./CreateEssayModal/CreateEssayModal";
+import EditEssayModal from "./EditEssayModal/EditEssayModal";
 import { quizService } from "../../../Services/quizService";
 import { essayService } from "../../../Services/essayService";
 import { assessmentService } from "../../../Services/assessmentService";
@@ -28,6 +30,9 @@ export default function AssignmentManagementView({
     const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
     const [showEditQuizModal, setShowEditQuizModal] = useState(false);
     const [selectedQuiz, setSelectedQuiz] = useState(null);
+    const [showCreateEssayModal, setShowCreateEssayModal] = useState(false);
+    const [showEditEssayModal, setShowEditEssayModal] = useState(false);
+    const [selectedEssay, setSelectedEssay] = useState(null);
 
     useEffect(() => {
         loadAssessments();
@@ -108,61 +113,21 @@ export default function AssignmentManagementView({
 
     const handleSubmitQuiz = async (quizFormData) => {
         try {
-            // Check if there's an existing assessment without a quiz
-            const assessmentsRes = await assessmentService.getTeacherAssessmentsByModule(moduleId);
-            let assessmentId = null;
-
-            if (assessmentsRes.data?.success && assessmentsRes.data?.data) {
-                const assessments = assessmentsRes.data.data;
-                // Find assessment that doesn't have a quiz yet
-                for (const assessment of assessments) {
-                    const aId = assessment.assessmentId || assessment.AssessmentId;
-                    const quizRes = await quizService.getTeacherQuizzesByAssessment(aId);
-                    if (!quizRes.data?.success || !quizRes.data?.data || quizRes.data.data.length === 0) {
-                        assessmentId = aId;
-                        break;
-                    }
-                }
+            // Always create a new assessment for quiz (don't reuse assessment with essay)
+            // This ensures quiz and essay never share the same assessment
+            const assessmentData = {
+                moduleId: parseInt(moduleId),
+                title: quizFormData.title,
+                description: quizFormData.description,
+                isPublished: quizFormData.isPublished || false,
+                totalPoints: 0,
+                passingScore: 0,
+            };
+            const assessmentRes = await assessmentService.createAssessment(assessmentData);
+            if (!assessmentRes.data?.success || !assessmentRes.data?.data) {
+                throw new Error(assessmentRes.data?.message || "Không thể tạo assessment");
             }
-
-            // If no available assessment, create a new one
-            if (!assessmentId) {
-                const assessmentData = {
-                    moduleId: parseInt(moduleId),
-                    title: quizFormData.title,
-                    description: quizFormData.description,
-                    isPublished: quizFormData.isPublished || false,
-                    totalPoints: 0,
-                    passingScore: 0,
-                };
-                const assessmentRes = await assessmentService.createAssessment(assessmentData);
-                if (assessmentRes.data?.success && assessmentRes.data?.data) {
-                    assessmentId = assessmentRes.data.data.assessmentId || assessmentRes.data.data.AssessmentId;
-                } else {
-                    throw new Error(assessmentRes.data?.message || "Không thể tạo assessment");
-                }
-            } else {
-                // Update existing assessment's isPublished
-                try {
-                    const assessmentRes = await assessmentService.getTeacherAssessmentById(assessmentId);
-                    if (assessmentRes.data?.success && assessmentRes.data?.data) {
-                        const currentAssessment = assessmentRes.data.data;
-                        await assessmentService.updateAssessment(assessmentId, {
-                            moduleId: currentAssessment.moduleId || currentAssessment.ModuleId,
-                            title: currentAssessment.title || currentAssessment.Title,
-                            description: currentAssessment.description || currentAssessment.Description || null,
-                            openAt: currentAssessment.openAt || currentAssessment.OpenAt || null,
-                            dueAt: currentAssessment.dueAt || currentAssessment.DueAt || null,
-                            timeLimit: currentAssessment.timeLimit || currentAssessment.TimeLimit || null,
-                            isPublished: quizFormData.isPublished || false,
-                            totalPoints: currentAssessment.totalPoints || currentAssessment.TotalPoints || 0,
-                            passingScore: currentAssessment.passingScore || currentAssessment.PassingScore || 0,
-                        });
-                    }
-                } catch (assessmentErr) {
-                    console.error("Error updating assessment isPublished:", assessmentErr);
-                }
-            }
+            const assessmentId = assessmentRes.data.data.assessmentId || assessmentRes.data.data.AssessmentId;
 
             // Create quiz
             const quizData = {
@@ -194,52 +159,39 @@ export default function AssignmentManagementView({
         }
     };
 
-    const handleCreateEssay = async () => {
+    const handleCreateEssay = () => {
+        setShowCreateEssayModal(true);
+    };
+
+    const handleSubmitEssay = async (essayFormData) => {
         try {
-            // Check if there's an existing assessment without an essay
-            const assessmentsRes = await assessmentService.getTeacherAssessmentsByModule(moduleId);
-            let assessmentId = null;
-
-            if (assessmentsRes.data?.success && assessmentsRes.data?.data) {
-                const assessments = assessmentsRes.data.data;
-                // Find assessment that doesn't have an essay yet
-                for (const assessment of assessments) {
-                    const aId = assessment.assessmentId || assessment.AssessmentId;
-                    const essayRes = await essayService.getTeacherEssaysByAssessment(aId);
-                    if (!essayRes.data?.success || !essayRes.data?.data || essayRes.data.data.length === 0) {
-                        assessmentId = aId;
-                        break;
-                    }
-                }
+            // Always create a new assessment for essay (don't reuse assessment with quiz)
+            const assessmentData = {
+                moduleId: parseInt(moduleId),
+                title: essayFormData.title,
+                description: essayFormData.description,
+                isPublished: essayFormData.isPublished || false,
+                totalPoints: 0,
+                passingScore: 0,
+            };
+            const assessmentRes = await assessmentService.createAssessment(assessmentData);
+            if (!assessmentRes.data?.success || !assessmentRes.data?.data) {
+                throw new Error(assessmentRes.data?.message || "Không thể tạo assessment");
             }
+            const assessmentId = assessmentRes.data.data.assessmentId || assessmentRes.data.data.AssessmentId;
 
-            // If no available assessment, create a new one
-            if (!assessmentId) {
-                const assessmentData = {
-                    moduleId: parseInt(moduleId),
-                    title: "Essay mới",
-                    description: null,
-                };
-                const assessmentRes = await assessmentService.createAssessment(assessmentData);
-                if (assessmentRes.data?.success && assessmentRes.data?.data) {
-                    assessmentId = assessmentRes.data.data.assessmentId || assessmentRes.data.data.AssessmentId;
-                } else {
-                    throw new Error(assessmentRes.data?.message || "Không thể tạo assessment");
-                }
-            }
-
-            // Create essay
+            // Create essay (without image/audio - can be added later when editing)
             const essayData = {
                 assessmentId: parseInt(assessmentId),
-                title: "Essay mới",
-                description: null,
+                title: essayFormData.title,
+                description: essayFormData.description || null,
             };
 
             const essayRes = await essayService.createEssay(essayData);
             if (essayRes.data?.success && essayRes.data?.data) {
-                const essayId = essayRes.data.data.essayId || essayRes.data.data.EssayId;
-                // Navigate to essay editor
-                onNavigate(ROUTE_PATHS.TEACHER_EDIT_ESSAY(courseId, lessonId, moduleId, assessmentId, essayId));
+                setShowCreateEssayModal(false);
+                // Reload assessments to show the new essay
+                await loadAssessments();
             } else {
                 throw new Error(essayRes.data?.message || "Không thể tạo essay");
             }
@@ -333,12 +285,69 @@ export default function AssignmentManagementView({
         }
     };
 
-    const handleEditEssay = (essay) => {
-        const assessmentId = essay.assessmentId;
-        const essayId = essay.essayId || essay.EssayId;
+    const handleEditEssay = (essay, isEditButton = false) => {
+        if (isEditButton) {
+            // Click vào icon edit - hiện modal chỉnh sửa
+            setSelectedEssay(essay);
+            setShowEditEssayModal(true);
+        } else {
+            // Click vào card - hiện modal chỉnh sửa
+            setSelectedEssay(essay);
+            setShowEditEssayModal(true);
+        }
+    };
 
-        if (essayId && assessmentId) {
-            onNavigate(ROUTE_PATHS.TEACHER_EDIT_ESSAY(courseId, lessonId, moduleId, assessmentId, essayId));
+    const handleSubmitEditEssay = async (essayFormData) => {
+        try {
+            if (!selectedEssay) return;
+
+            const essayId = selectedEssay.essayId || selectedEssay.EssayId;
+            const assessmentId = selectedEssay.assessmentId || selectedEssay.AssessmentId;
+
+            if (!assessmentId) {
+                throw new Error("Không tìm thấy Assessment ID");
+            }
+
+            // Update essay
+            const updateData = {
+                title: essayFormData.title,
+                description: essayFormData.description || null,
+            };
+
+            const essayRes = await essayService.updateEssay(essayId, updateData);
+            if (essayRes.data?.success) {
+                // Update assessment title and isPublished - need to get current assessment data first
+                if (assessmentId) {
+                    try {
+                        const assessmentRes = await assessmentService.getTeacherAssessmentById(assessmentId);
+                        if (assessmentRes.data?.success && assessmentRes.data?.data) {
+                            const currentAssessment = assessmentRes.data.data;
+                            await assessmentService.updateAssessment(assessmentId, {
+                                moduleId: currentAssessment.moduleId || currentAssessment.ModuleId,
+                                title: essayFormData.title,
+                                description: essayFormData.description || null,
+                                openAt: currentAssessment.openAt || currentAssessment.OpenAt || null,
+                                dueAt: currentAssessment.dueAt || currentAssessment.DueAt || null,
+                                timeLimit: currentAssessment.timeLimit || currentAssessment.TimeLimit || null,
+                                isPublished: essayFormData.isPublished !== undefined ? essayFormData.isPublished : (currentAssessment.isPublished !== undefined ? currentAssessment.isPublished : currentAssessment.IsPublished || false),
+                                totalPoints: currentAssessment.totalPoints || currentAssessment.TotalPoints || 0,
+                                passingScore: currentAssessment.passingScore || currentAssessment.PassingScore || 0,
+                            });
+                        }
+                    } catch (assessmentErr) {
+                        console.error("Error updating assessment:", assessmentErr);
+                        // Don't throw error here, essay update was successful
+                    }
+                }
+                setShowEditEssayModal(false);
+                setSelectedEssay(null);
+                await loadAssessments();
+            } else {
+                throw new Error(essayRes.data?.message || "Không thể cập nhật essay");
+            }
+        } catch (err) {
+            console.error("Error updating essay:", err);
+            alert(err.response?.data?.message || err.message || "Có lỗi xảy ra khi cập nhật essay");
         }
     };
 
@@ -486,7 +495,8 @@ export default function AssignmentManagementView({
                     <Col lg={6}>
                         <EssayList
                             essays={essays}
-                            onEdit={handleEditEssay}
+                            onEdit={(essay) => handleEditEssay(essay, true)}
+                            onCardClick={(essay) => handleEditEssay(essay, false)}
                             onDelete={handleDeleteEssay}
                         />
                     </Col>
@@ -507,6 +517,22 @@ export default function AssignmentManagementView({
                 }}
                 onSubmit={handleSubmitEditQuiz}
                 quiz={selectedQuiz}
+            />
+
+            <CreateEssayModal
+                show={showCreateEssayModal}
+                onClose={() => setShowCreateEssayModal(false)}
+                onSubmit={handleSubmitEssay}
+            />
+
+            <EditEssayModal
+                show={showEditEssayModal}
+                onClose={() => {
+                    setShowEditEssayModal(false);
+                    setSelectedEssay(null);
+                }}
+                onSubmit={handleSubmitEditEssay}
+                essay={selectedEssay}
             />
         </div>
     );

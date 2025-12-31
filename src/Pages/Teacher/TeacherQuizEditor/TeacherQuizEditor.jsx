@@ -10,6 +10,7 @@ import { questionService } from "../../../Services/questionService";
 import { ROUTE_PATHS } from "../../../Routes/Paths";
 import QuestionSidebar from "../../../Components/Teacher/QuizEditor/QuestionSidebar/QuestionSidebar";
 import QuestionEditor from "../../../Components/Teacher/QuizEditor/QuestionEditor/QuestionEditor";
+import BulkCreateQuestionsModal from "../../../Components/Teacher/QuizEditor/BulkCreateQuestionsModal/BulkCreateQuestionsModal";
 import NotificationModal from "../../../Components/Common/NotificationModal/NotificationModal";
 
 export default function TeacherQuizEditor() {
@@ -30,6 +31,9 @@ export default function TeacherQuizEditor() {
 
     // Selection state
     const [selectedQuestion, setSelectedQuestion] = useState(null);
+
+    // Bulk create modal state
+    const [showBulkCreateModal, setShowBulkCreateModal] = useState(false);
 
     // Notification
     const [notification, setNotification] = useState({
@@ -95,6 +99,11 @@ export default function TeacherQuizEditor() {
 
     const ensureDefaultSectionAndGroup = async (currentQuizId) => {
         try {
+            // Validate quizId
+            if (!currentQuizId || currentQuizId <= 0) {
+                throw new Error("Quiz ID không hợp lệ");
+            }
+
             // Fetch sections
             const sectionsRes = await quizService.getQuizSectionsByQuiz(currentQuizId);
             let section = null;
@@ -111,6 +120,8 @@ export default function TeacherQuizEditor() {
 
                 if (createSectionRes.data?.success && createSectionRes.data?.data) {
                     section = createSectionRes.data.data;
+                } else {
+                    throw new Error(createSectionRes.data?.message || "Không thể tạo section mặc định");
                 }
             }
 
@@ -118,8 +129,13 @@ export default function TeacherQuizEditor() {
                 throw new Error("Không thể tạo section mặc định");
             }
 
-            setDefaultSection(section);
+            // Validate section ID
             const sectionId = section.quizSectionId || section.QuizSectionId;
+            if (!sectionId || sectionId <= 0) {
+                throw new Error("Section ID không hợp lệ");
+            }
+
+            setDefaultSection(section);
 
             // Fetch groups
             const groupsRes = await quizService.getQuizGroupsBySection(sectionId);
@@ -139,6 +155,8 @@ export default function TeacherQuizEditor() {
 
                 if (createGroupRes.data?.success && createGroupRes.data?.data) {
                     group = createGroupRes.data.data;
+                } else {
+                    throw new Error(createGroupRes.data?.message || "Không thể tạo group mặc định");
                 }
             }
 
@@ -146,19 +164,37 @@ export default function TeacherQuizEditor() {
                 throw new Error("Không thể tạo group mặc định");
             }
 
-            setDefaultGroup(group);
+            // Validate group ID
             const groupId = group.quizGroupId || group.QuizGroupId;
+            if (!groupId || groupId <= 0) {
+                throw new Error("Group ID không hợp lệ");
+            }
 
-            // Fetch questions
+            setDefaultGroup(group);
+
+            // Fetch questions only after section and group are confirmed
             await loadQuestions(groupId);
         } catch (err) {
             console.error("Error ensuring default section/group:", err);
-            setError("Có lỗi xảy ra khi tải cấu trúc quiz");
+            setError(err.message || "Có lỗi xảy ra khi tải cấu trúc quiz");
+            // Set notification for user feedback
+            setNotification({
+                isOpen: true,
+                type: "error",
+                message: err.message || "Có lỗi xảy ra khi tải cấu trúc quiz",
+            });
         }
     };
 
     const loadQuestions = async (groupId) => {
         try {
+            // Validate groupId before loading
+            if (!groupId || groupId <= 0) {
+                console.error("Invalid groupId:", groupId);
+                setError("Group ID không hợp lệ, không thể tải câu hỏi");
+                return;
+            }
+
             const questionsRes = await questionService.getQuestionsByGroup(groupId);
             if (questionsRes.data?.success && questionsRes.data?.data) {
                 const questionsData = questionsRes.data.data;
@@ -167,10 +203,24 @@ export default function TeacherQuizEditor() {
                 // Auto-select first question if available
                 if (questionsData.length > 0 && !selectedQuestion) {
                     setSelectedQuestion(questionsData[0]);
+                } else if (questionsData.length === 0) {
+                    // Clear selection if no questions
+                    setSelectedQuestion(null);
                 }
+            } else {
+                // No questions found, set empty array
+                setQuestions([]);
+                setSelectedQuestion(null);
             }
         } catch (err) {
             console.error("Error loading questions:", err);
+            setError(err.message || "Có lỗi xảy ra khi tải câu hỏi");
+            // Set notification for user feedback
+            setNotification({
+                isOpen: true,
+                type: "error",
+                message: err.message || "Có lỗi xảy ra khi tải câu hỏi",
+            });
         }
     };
 
@@ -248,8 +298,9 @@ export default function TeacherQuizEditor() {
             const sectionId = defaultSection?.quizSectionId || defaultSection?.QuizSectionId;
             const groupId = defaultGroup?.quizGroupId || defaultGroup?.QuizGroupId;
 
-            if (!sectionId || !groupId) {
-                throw new Error("Không tìm thấy Section hoặc Group ID");
+            // Validate section and group IDs
+            if (!sectionId || sectionId <= 0 || !groupId || groupId <= 0) {
+                throw new Error("Section ID hoặc Group ID không hợp lệ. Vui lòng đợi hệ thống khởi tạo xong.");
             }
 
             // Prepare update data with required fields
@@ -287,6 +338,59 @@ export default function TeacherQuizEditor() {
                 isOpen: true,
                 type: "error",
                 message: error.response?.data?.message || error.message || "Có lỗi xảy ra khi cập nhật câu hỏi",
+            });
+        }
+    };
+
+    const handleBulkCreateQuestions = async (questionsData) => {
+        try {
+            if (!defaultSection || !defaultGroup) {
+                setNotification({
+                    isOpen: true,
+                    type: "error",
+                    message: "Vui lòng đợi hệ thống khởi tạo xong",
+                });
+                return;
+            }
+
+            const sectionId = defaultSection.quizSectionId || defaultSection.QuizSectionId;
+            const groupId = defaultGroup.quizGroupId || defaultGroup.QuizGroupId;
+
+            // Validate section and group IDs
+            if (!sectionId || sectionId <= 0 || !groupId || groupId <= 0) {
+                throw new Error("Section ID hoặc Group ID không hợp lệ");
+            }
+
+            // Add section and group IDs to each question
+            const questionsWithIds = questionsData.map((q) => ({
+                ...q,
+                quizSectionId: parseInt(sectionId),
+                quizGroupId: parseInt(groupId),
+            }));
+
+            // Call bulk create API
+            const response = await questionService.bulkCreateQuestions({
+                questions: questionsWithIds,
+            });
+
+            if (response.data?.success) {
+                // Reload questions
+                await loadQuestions(groupId);
+                setShowBulkCreateModal(false);
+                setNotification({
+                    isOpen: true,
+                    type: "success",
+                    message: `Tạo thành công ${questionsData.length} câu hỏi`,
+                });
+            } else {
+                throw new Error(response.data?.message || "Tạo câu hỏi thất bại");
+            }
+        } catch (error) {
+            console.error("Error bulk creating questions:", error);
+            setNotification({
+                isOpen: true,
+                type: "error",
+                message: error.response?.data?.message || error.message || "Có lỗi xảy ra khi tạo câu hỏi",
             });
         }
     };
@@ -447,6 +551,7 @@ export default function TeacherQuizEditor() {
                                 selectedQuestion={selectedQuestion}
                                 onQuestionSelect={handleQuestionSelect}
                                 onCreateQuestion={handleCreateQuestion}
+                                onBulkCreateQuestions={() => setShowBulkCreateModal(true)}
                                 onDeleteQuestion={handleDeleteQuestion}
                             />
                         </Col>
@@ -486,6 +591,12 @@ export default function TeacherQuizEditor() {
                     </Row>
                 </Container>
             </div>
+
+            <BulkCreateQuestionsModal
+                show={showBulkCreateModal}
+                onClose={() => setShowBulkCreateModal(false)}
+                onSubmit={handleBulkCreateQuestions}
+            />
 
             <NotificationModal
                 isOpen={notification.isOpen}

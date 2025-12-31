@@ -13,6 +13,11 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .sidebar-title {
   font-size: 18px;
   font-weight: 600;

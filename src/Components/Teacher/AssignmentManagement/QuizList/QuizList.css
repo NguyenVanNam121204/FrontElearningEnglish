@@ -8,6 +8,11 @@
     box-sizing: border-box;
 }
 
+.quiz-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .section-title {
     font-size: 20px;
     font-weight: 600;
