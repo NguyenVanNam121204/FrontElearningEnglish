@@ -27,11 +27,16 @@ export default function EssayList({ essays, onEdit, onDelete }) {
                     const isPublished = status === 1 || status === "Published" || essay.isPublished || essay.IsPublished;
 
                     return (
-                        <Card key={essayId || assessmentId} className="essay-card">
+                        <Card
+                            key={essayId || assessmentId}
+                            className="essay-card"
+                            onClick={() => onEdit(essay)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             <Card.Body>
                                 <div className="essay-card-header">
                                     <h5 className="essay-title">{title}</h5>
-                                    <div className="essay-actions">
+                                    <div className="essay-actions" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             className="action-btn edit-btn"
                                             onClick={() => onEdit(essay)}

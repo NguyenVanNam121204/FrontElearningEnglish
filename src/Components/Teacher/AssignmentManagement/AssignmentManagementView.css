@@ -1,7 +1,11 @@
 .assignment-management-view {
     padding: 20px;
+    padding-top: 100px;
+    /* Add padding top to avoid header overlap */
     background: #f8f9fa;
     min-height: 100vh;
+    scroll-margin-top: 80px;
+    /* Scroll margin for smooth scrolling */
 }
 
 .assignment-header {

@@ -3,7 +3,7 @@ import { Card } from "react-bootstrap";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "./QuizList.css";
 
-export default function QuizList({ quizzes, onEdit, onDelete }) {
+export default function QuizList({ quizzes, onEdit, onCardClick, onDelete }) {
     if (!quizzes || quizzes.length === 0) {
         return (
             <div className="quiz-list-container">
@@ -28,11 +28,16 @@ export default function QuizList({ quizzes, onEdit, onDelete }) {
                     const isPublished = status === 1 || status === "Open" || status === "Published" || quiz.isPublished || quiz.IsPublished;
 
                     return (
-                        <Card key={quizId || assessmentId} className="quiz-card">
+                        <Card
+                            key={quizId || assessmentId}
+                            className="quiz-card"
+                            onClick={() => onCardClick && onCardClick(quiz)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             <Card.Body>
                                 <div className="quiz-card-header">
                                     <h5 className="quiz-title">{title}</h5>
-                                    <div className="quiz-actions">
+                                    <div className="quiz-actions" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             className="action-btn edit-btn"
                                             onClick={() => onEdit(quiz)}

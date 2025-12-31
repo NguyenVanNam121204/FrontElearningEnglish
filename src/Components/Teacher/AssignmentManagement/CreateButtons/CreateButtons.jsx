@@ -7,7 +7,6 @@ export default function CreateButtons({ onCreateQuiz, onCreateEssay }) {
     return (
         <div className="create-buttons-container">
             <Button
-                variant="primary"
                 className="create-quiz-btn"
                 onClick={onCreateQuiz}
                 size="lg"
@@ -16,7 +15,6 @@ export default function CreateButtons({ onCreateQuiz, onCreateEssay }) {
                 Tạo Quiz mới
             </Button>
             <Button
-                variant="info"
                 className="create-essay-btn"
                 onClick={onCreateEssay}
                 size="lg"
