@@ -4,6 +4,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import "./TeacherLessonDetail.css";
 import TeacherHeader from "../../Components/Header/TeacherHeader";
 import { useAuth } from "../../Context/AuthContext";
+import { useModuleTypes } from "../../hooks/useModuleTypes";
 import { teacherService } from "../../Services/teacherService";
 import { lectureService } from "../../Services/lectureService";
 import { flashcardService } from "../../Services/flashcardService";
@@ -22,6 +23,7 @@ export default function TeacherLessonDetail() {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
   const { user, roles, isAuthenticated } = useAuth();
+  const { isLecture, isFlashCard, isAssessment, isClickable, getModuleTypePath } = useModuleTypes();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [modules, setModules] = useState([]);
@@ -157,7 +159,7 @@ export default function TeacherLessonDetail() {
     try {
       const moduleId = module.moduleId || module.ModuleId;
 
-      if (contentTypeNum === 1) {
+      if (isLecture(contentTypeNum)) {
         // Lecture module - fetch lectures
         const response = await lectureService.getTeacherLecturesByModule(moduleId);
 
@@ -167,7 +169,7 @@ export default function TeacherLessonDetail() {
           setContentError("Không thể tải danh sách lectures");
           setModuleContent([]);
         }
-      } else if (contentTypeNum === 2) {
+      } else if (isFlashCard(contentTypeNum)) {
         // FlashCard module - fetch flashcards
         const response = await flashcardService.getTeacherFlashcardsByModule(moduleId);
 
@@ -177,7 +179,7 @@ export default function TeacherLessonDetail() {
           setContentError("Không thể tải danh sách flashcards");
           setModuleContent([]);
         }
-      } else if (contentTypeNum === 3) {
+      } else if (isAssessment(contentTypeNum)) {
         // Assessment module - fetch assessments
         const response = await assessmentService.getTeacherAssessmentsByModule(moduleId);
 
@@ -362,7 +364,7 @@ export default function TeacherLessonDetail() {
                       Đang tải danh sách {(() => {
                         const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                         const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
-                        return contentTypeNum === 1 ? 'lectures' : contentTypeNum === 2 ? 'flashcards' : contentTypeNum === 3 ? 'assessments' : 'nội dung';
+                        return getModuleTypePath(contentTypeNum);
                       })()}...
                     </div>
                   ) : contentError ? (
@@ -375,7 +377,7 @@ export default function TeacherLessonDetail() {
                             const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                             const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
 
-                            if (contentTypeNum === 1) {
+                            if (isLecture(contentTypeNum)) {
                               // Lecture
                               const lectureId = item.lectureId || item.LectureId;
                               const lectureTitle = item.title || item.Title || `Lecture ${index + 1}`;
@@ -403,7 +405,7 @@ export default function TeacherLessonDetail() {
                                   </button>
                                 </div>
                               );
-                            } else if (contentTypeNum === 2) {
+                            } else if (isFlashCard(contentTypeNum)) {
                               // FlashCard - backend returns flashCardId (camelCase with capital C)
                               const flashcardId = item.flashCardId || item.flashcardId || item.FlashcardId || item.FlashCardId;
                               const word = item.word || item.Word || `Flashcard ${index + 1}`;
@@ -441,7 +443,7 @@ export default function TeacherLessonDetail() {
                                   </button>
                                 </div>
                               );
-                            } else if (contentTypeNum === 3) {
+                            } else if (isAssessment(contentTypeNum)) {
                               // Assessment - backend returns AssessmentId (PascalCase)
                               const assessmentId = item.assessmentId || item.AssessmentId;
                               const title = item.title || item.Title || `Assessment ${index + 1}`;
@@ -548,13 +550,14 @@ export default function TeacherLessonDetail() {
                             {(() => {
                               const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                               const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
-                              return contentTypeNum === 1
-                                ? "Chưa có lecture nào trong module này"
-                                : contentTypeNum === 2
-                                  ? "Chưa có flashcard nào trong module này"
-                                  : contentTypeNum === 3
-                                    ? "Chưa có assessment nào trong module này"
-                                    : "Chưa có nội dung nào trong module này";
+                              if (isLecture(contentTypeNum)) {
+                                return "Chưa có lecture nào trong module này";
+                              } else if (isFlashCard(contentTypeNum)) {
+                                return "Chưa có flashcard nào trong module này";
+                              } else if (isAssessment(contentTypeNum)) {
+                                return "Chưa có assessment nào trong module này";
+                              }
+                              return "Chưa có nội dung nào trong module này";
                             })()}
                           </div>
                         )}
@@ -566,7 +569,7 @@ export default function TeacherLessonDetail() {
                         const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
                         const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
 
-                        if (contentTypeNum === 1) {
+                        if (isLecture(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn lecture-btn"
@@ -578,7 +581,7 @@ export default function TeacherLessonDetail() {
                               Tạo Lecture
                             </button>
                           );
-                        } else if (contentTypeNum === 2) {
+                        } else if (isFlashCard(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn flashcard-btn"
@@ -590,7 +593,7 @@ export default function TeacherLessonDetail() {
                               Tạo Flashcard
                             </button>
                           );
-                        } else if (contentTypeNum === 3) {
+                        } else if (isAssessment(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn assessment-btn"
@@ -644,12 +647,12 @@ export default function TeacherLessonDetail() {
                           key={moduleId || index}
                           className="module-item"
                           onClick={() => {
-                            if (contentTypeNum === 1 || contentTypeNum === 2 || contentTypeNum === 3) {
+                            if (isClickable(contentTypeNum)) {
                               // Lecture, FlashCard, Assessment - show content list
                               handleModuleClick(module);
                             }
                           }}
-                          style={{ cursor: (contentTypeNum === 1 || contentTypeNum === 2 || contentTypeNum === 3) ? 'pointer' : 'default' }}
+                          style={{ cursor: isClickable(contentTypeNum) ? 'pointer' : 'default' }}
                         >
                           <div className="module-item-content">
                             <img

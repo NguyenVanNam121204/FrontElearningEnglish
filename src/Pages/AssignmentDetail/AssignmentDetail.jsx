@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
+import { useSubmissionStatus } from "../../hooks/useSubmissionStatus";
 import QuizCard from "../../Components/Assignment/QuizCard/QuizCard";
 import EssayCard from "../../Components/Assignment/EssayCard/EssayCard";
 import AssessmentInfoModal from "../../Components/Assignment/AssessmentInfoModal/AssessmentInfoModal";
@@ -18,6 +19,7 @@ import "./AssignmentDetail.css";
 export default function AssignmentDetail() {
     const { courseId, lessonId, moduleId } = useParams();
     const navigate = useNavigate();
+    const { isInProgress } = useSubmissionStatus();
     const [assessments, setAssessments] = useState([]);
     const [module, setModule] = useState(null);
     const [lesson, setLesson] = useState(null);
@@ -198,8 +200,8 @@ export default function AssignmentDetail() {
                                         const status = attempt.Status || attempt.status;
                                         console.log("📊 [AssignmentDetail] Attempt status:", status);
 
-                                        // Status 1 = InProgress
-                                        if (status === 1) {
+                                        // Check if status is InProgress
+                                        if (isInProgress(status)) {
                                             const verifiedProgress = {
                                                 quizId,
                                                 attemptId,
@@ -398,10 +400,6 @@ export default function AssignmentDetail() {
                 message: err.response?.data?.message || "Không thể bắt đầu làm essay"
             });
         }
-    };
-
-    const handleBackClick = () => {
-        navigate(`/course/${courseId}/lesson/${lessonId}`);
     };
 
     if (loading) {

@@ -39,48 +39,78 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
   // Load maxStudent from teacher package
   useEffect(() => {
     const loadMaxStudent = async () => {
-      if (!show || !user?.teacherSubscription?.packageLevel) {
+      if (!show) {
+        console.log('⚠️ Modal not shown');
+        return;
+      }
+      
+      if (!user) {
+        console.log('⚠️ No user');
+        setMaxStudent(0);
+        return;
+      }
+      
+      console.log('👤 Full user object:', user);
+      console.log('📦 TeacherSubscription:', user.teacherSubscription);
+      
+      if (!user?.teacherSubscription?.packageLevel) {
+        console.log('⚠️ No package level. TeacherSubscription:', user?.teacherSubscription);
         setMaxStudent(0);
         return;
       }
 
       try {
         setLoadingPackage(true);
+        console.log('🔄 Loading teacher packages...');
         const packageResponse = await teacherPackageService.getAll();
-        const userPackageLevel = user.teacherSubscription.packageLevel;
+        console.log('📦 Full API Response:', packageResponse);
+        console.log('📦 Response.data:', packageResponse.data);
+        
+        const userPackageLevel = user.teacherSubscription.packageLevel; // String: "Basic", "Standard", "Premium", "Professional"
+        console.log('👤 User package level:', userPackageLevel, 'Type:', typeof userPackageLevel);
 
         if (packageResponse.data?.success && packageResponse.data?.data && userPackageLevel) {
           const packages = packageResponse.data.data;
-          const levelMap = {
-            "Basic": 0,
-            "Standard": 1,
-            "Premium": 2,
-            "Professional": 3
-          };
-          const expectedLevel = levelMap[userPackageLevel];
-
+          console.log('📋 All packages count:', packages.length);
+          console.log('📋 First package structure:', packages[0]);
+          
+          // Backend returns: PackageName = "Basic Teacher Package", user has packageLevel = "Basic"
+          // Match by checking if PackageName CONTAINS the packageLevel string
           const matchedPackage = packages.find(
             (pkg) => {
-              const pkgLevel = pkg.level !== undefined ? pkg.level : (pkg.Level !== undefined ? pkg.Level : null);
-              return (
-                pkgLevel === expectedLevel ||
-                pkgLevel?.toString() === userPackageLevel ||
-                (typeof pkgLevel === "string" && pkgLevel === userPackageLevel)
-              );
+              const pkgName = pkg.packageName || pkg.PackageName || "";
+              const pkgNameLower = pkgName.toLowerCase();
+              const userLevelLower = userPackageLevel.toLowerCase().trim();
+              
+              // Check if package name contains the user's package level
+              const matches = pkgNameLower.includes(userLevelLower);
+              console.log(`🔍 Checking if "${pkgName}" contains "${userPackageLevel}": ${matches}`);
+              
+              return matches;
             }
           );
 
           if (matchedPackage) {
+            console.log('✅ Matched package found:', matchedPackage);
             const maxStudents = matchedPackage.maxStudents || matchedPackage.MaxStudents || 0;
             setMaxStudent(maxStudents);
+            console.log(`✅ Set maxStudent to: ${maxStudents}`);
           } else {
+            console.error(`⚠️ No package found matching: "${userPackageLevel}"`);
+            console.log('Available package names:', packages.map(p => p.packageName || p.PackageName));
             setMaxStudent(0);
           }
         } else {
+          console.error('❌ Invalid response structure:', {
+            success: packageResponse.data?.success,
+            hasData: !!packageResponse.data?.data,
+            userPackageLevel
+          });
           setMaxStudent(0);
         }
       } catch (error) {
-        console.error("Error loading teacher package:", error);
+        console.error("❌ Error loading teacher package:", error);
+        console.error("Error details:", error.response?.data || error.message);
         setMaxStudent(0);
       } finally {
         setLoadingPackage(false);
@@ -246,11 +276,11 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
       let submitData;
       
       if (isUpdateMode && courseData) {
-        // Update mode: chỉ gửi các trường có thể cập nhật (không gửi type)
+        // Update mode: chỉ gửi các trường có thể cập nhật (không gửi type và maxStudent)
+        // maxStudent không cho phép update vì nó phụ thuộc vào gói hiện tại của giáo viên
         submitData = {
           title: title.trim(),
           description: description.trim(),
-          maxStudent: maxStudent, // Từ gói giáo viên hiện tại
         };
 
         // Chỉ thêm imageTempKey và imageType nếu có upload ảnh mới
@@ -277,7 +307,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
           title: title.trim(),
           description: description.trim(),
           type: type,
-          maxStudent: maxStudent, // Từ gói giáo viên hiện tại
+          maxStudent: maxStudent || 0, // Từ gói giáo viên hiện tại, default 0 nếu không load được
         };
 
         // Chỉ thêm imageTempKey và imageType nếu có upload ảnh mới

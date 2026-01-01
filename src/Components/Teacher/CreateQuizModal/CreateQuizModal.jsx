@@ -2,24 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import { quizService } from "../../../Services/quizService";
 import DateTimePicker from "../DateTimePicker/DateTimePicker";
+import { useEnums } from "../../../Context/EnumContext";
 import "./CreateQuizModal.css";
 
-// QuizType enum: Practice = 1, MiniTest = 2, FinalExam = 3
-const QUIZ_TYPES = [
-  { value: 1, label: "Practice" },
-  { value: 2, label: "Mini Test" },
-  { value: 3, label: "Final Exam" },
-];
-
-// QuizStatus enum: Draft = 0, Open = 1, Closed = 2, Archived = 3
-const QUIZ_STATUSES = [
-  { value: 0, label: "Draft" },
-  { value: 1, label: "Open" },
-  { value: 2, label: "Closed" },
-  { value: 3, label: "Archived" },
-];
-
 export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId, quizToUpdate = null }) {
+  const { getEnumOptions, loading: enumsLoading } = useEnums();
   const isUpdateMode = !!quizToUpdate;
   
   // Form state
@@ -293,8 +280,9 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
                     setType(parseInt(e.target.value));
                     setErrors({ ...errors, type: null });
                   }}
+                  disabled={enumsLoading}
                 >
-                  {QUIZ_TYPES.map((qt) => (
+                  {getEnumOptions('QuizType').map((qt) => (
                     <option key={qt.value} value={qt.value}>
                       {qt.label}
                     </option>
@@ -315,8 +303,9 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
                     setStatus(parseInt(e.target.value));
                     setErrors({ ...errors, status: null });
                   }}
+                  disabled={enumsLoading}
                 >
-                  {QUIZ_STATUSES.map((qs) => (
+                  {getEnumOptions('QuizStatus').map((qs) => (
                     <option key={qs.value} value={qs.value}>
                       {qs.label}
                     </option>

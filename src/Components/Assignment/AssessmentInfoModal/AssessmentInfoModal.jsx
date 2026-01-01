@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, Row, Col } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { FaQuestionCircle, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaList, FaRedo, FaRandom } from "react-icons/fa";
+import { useSubmissionStatus } from "../../../hooks/useSubmissionStatus";
 import { quizAttemptService } from "../../../Services/quizAttemptService";
 import { essayService } from "../../../Services/essayService";
 import { quizService } from "../../../Services/quizService";
@@ -13,6 +14,7 @@ export default function AssessmentInfoModal({
     onStartQuiz,
     onStartEssay
 }) {
+    const { isInProgress } = useSubmissionStatus();
     const [quiz, setQuiz] = useState(null);
     const [essay, setEssay] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -78,7 +80,7 @@ export default function AssessmentInfoModal({
                                             const status = attempt.Status || attempt.status;
                                             console.log("📊 [AssessmentInfoModal] Attempt status:", status);
                                             
-                                            if (status === 1) { // InProgress
+                                            if (isInProgress(status)) {
                                                 setInProgressAttempt(progress);
                                                 console.log("✅ [AssessmentInfoModal] In-progress attempt verified:", progress.attemptId);
                                             } else {
@@ -245,7 +247,6 @@ export default function AssessmentInfoModal({
 
     // Determine type based on actual quiz/essay data, not title
     const isQuiz = !!quiz;
-    const isEssay = !!essay;
 
     return (
         <div className="modal-overlay assessment-info-modal-overlay" onClick={onClose}>
