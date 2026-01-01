@@ -642,16 +642,29 @@ export default function TeacherLessonDetail() {
 
                       const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
 
+                      // Handle module click - navigate to corresponding screen based on module type
+                      const handleModuleItemClick = () => {
+                        if (!isClickable(contentTypeNum)) return;
+                        
+                        const moduleIdValue = module.moduleId || module.ModuleId;
+                        
+                        if (isLecture(contentTypeNum)) {
+                          // Navigate to create lecture page
+                          navigate(ROUTE_PATHS.TEACHER_CREATE_LECTURE(courseId, lessonId, moduleIdValue));
+                        } else if (isFlashCard(contentTypeNum)) {
+                          // Navigate to create flashcard page
+                          navigate(ROUTE_PATHS.TEACHER_CREATE_FLASHCARD(courseId, lessonId, moduleIdValue));
+                        } else if (isAssessment(contentTypeNum)) {
+                          // For Assessment, show content list in current screen (existing behavior)
+                          handleModuleClick(module);
+                        }
+                      };
+
                       return (
                         <div
                           key={moduleId || index}
                           className="module-item"
-                          onClick={() => {
-                            if (isClickable(contentTypeNum)) {
-                              // Lecture, FlashCard, Assessment - show content list
-                              handleModuleClick(module);
-                            }
-                          }}
+                          onClick={handleModuleItemClick}
                           style={{ cursor: isClickable(contentTypeNum) ? 'pointer' : 'default' }}
                         >
                           <div className="module-item-content">

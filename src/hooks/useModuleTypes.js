@@ -3,15 +3,29 @@ import { useEnums } from '../Context/EnumContext';
 /**
  * Custom hook for Module Type utilities
  * Provides dynamic MODULE_TYPES object and helper functions
+ * 
+ * Fallback values match backend ModuleType enum:
+ * - Lecture = 1
+ * - FlashCard = 2
+ * - Assessment = 3
  */
 export const useModuleTypes = () => {
     const { moduleTypes } = useEnums();
 
-    // Tạo object MODULE_TYPES động từ enum
-    const MODULE_TYPES = moduleTypes.reduce((acc, type) => {
-        acc[type.name.toUpperCase()] = type.value;
-        return acc;
-    }, {});
+    // Fallback values từ backend ModuleType enum (nếu enum chưa load)
+    const FALLBACK_MODULE_TYPES = {
+        LECTURE: 1,
+        FLASHCARD: 2,
+        ASSESSMENT: 3
+    };
+
+    // Tạo object MODULE_TYPES động từ enum, fallback về hardcoded values nếu empty
+    const MODULE_TYPES = moduleTypes && moduleTypes.length > 0
+        ? moduleTypes.reduce((acc, type) => {
+            acc[type.name.toUpperCase()] = type.value;
+            return acc;
+        }, {})
+        : FALLBACK_MODULE_TYPES;
 
     /**
      * Get module type label from value
@@ -43,7 +57,8 @@ export const useModuleTypes = () => {
      * @returns {boolean}
      */
     const isLecture = (value) => {
-        return value === MODULE_TYPES.LECTURE;
+        // Fallback: check directly against value 1 if MODULE_TYPES.LECTURE is undefined
+        return value === (MODULE_TYPES.LECTURE ?? 1);
     };
 
     /**
@@ -52,7 +67,8 @@ export const useModuleTypes = () => {
      * @returns {boolean}
      */
     const isFlashCard = (value) => {
-        return value === MODULE_TYPES.FLASHCARD;
+        // Fallback: check directly against value 2 if MODULE_TYPES.FLASHCARD is undefined
+        return value === (MODULE_TYPES.FLASHCARD ?? 2);
     };
 
     /**
@@ -61,7 +77,8 @@ export const useModuleTypes = () => {
      * @returns {boolean}
      */
     const isAssessment = (value) => {
-        return value === MODULE_TYPES.ASSESSMENT;
+        // Fallback: check directly against value 3 if MODULE_TYPES.ASSESSMENT is undefined
+        return value === (MODULE_TYPES.ASSESSMENT ?? 3);
     };
 
     /**
@@ -70,9 +87,15 @@ export const useModuleTypes = () => {
      * @returns {boolean}
      */
     const isClickable = (value) => {
-        return value === MODULE_TYPES.LECTURE || 
-               value === MODULE_TYPES.FLASHCARD || 
-               value === MODULE_TYPES.ASSESSMENT;
+        // All module types are clickable (Lecture, FlashCard, Assessment)
+        // Fallback to direct value check if MODULE_TYPES is empty
+        const lectureValue = MODULE_TYPES.LECTURE ?? 1;
+        const flashcardValue = MODULE_TYPES.FLASHCARD ?? 2;
+        const assessmentValue = MODULE_TYPES.ASSESSMENT ?? 3;
+        
+        return value === lectureValue || 
+               value === flashcardValue || 
+               value === assessmentValue;
     };
 
     return {
