@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Button, Card, Badge, Form } from "react-bootstrap";
-import { FaPlus, FaArrowLeft, FaEdit, FaTrash, FaCopy } from "react-icons/fa";
+import { Container, Button, Card, Badge, Row, Col } from "react-bootstrap";
+import { FaPlus, FaArrowLeft, FaEdit, FaTrash, FaLayerGroup, FaList } from "react-icons/fa";
 import TeacherHeader from "../../../Components/Header/TeacherHeader";
 import CreateQuestionModal from "../../../Components/Teacher/CreateQuestionModal/CreateQuestionModal";
+import CreateQuizGroupModal from "../../../Components/Teacher/CreateQuizGroupModal/CreateQuizGroupModal"; // Import Group Modal
 import ConfirmModal from "../../../Components/Common/ConfirmModal/ConfirmModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
 import { questionService } from "../../../Services/questionService";
@@ -24,6 +25,7 @@ export default function TeacherQuestionManagement() {
   const navigate = useNavigate();
   
   const [questions, setQuestions] = useState([]);
+  const [groups, setGroups] = useState([]); // Store groups list
   const [contextData, setContextData] = useState({ title: "", subtitle: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,12 +34,21 @@ export default function TeacherQuestionManagement() {
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkQuestions, setBulkQuestions] = useState([]);
 
-  // Modal states
+  // Question Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [questionToUpdate, setQuestionToUpdate] = useState(null);
+  const [targetGroupId, setTargetGroupId] = useState(null); // Which group adding question to?
+
+  // Question Delete Modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState(null);
   
+  // Group Modals (Edit/Delete)
+  const [showGroupEditModal, setShowGroupEditModal] = useState(false);
+  const [groupToUpdate, setGroupToUpdate] = useState(null);
+  const [showGroupDeleteModal, setShowGroupDeleteModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState(null);
+
   // Success Modal states
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -55,7 +66,7 @@ export default function TeacherQuestionManagement() {
       let subtitle = "";
 
       if (groupId) {
-        // Fetch group info and questions
+        // [Legacy/Specific Group View] - though user wants unified view, keep this logic safe
         const groupRes = await quizService.getQuizGroupById(groupId);
         if (groupRes.data?.success) {
            title = `Group: ${groupRes.data.data.name || "Untitled Group"}`;
@@ -63,12 +74,22 @@ export default function TeacherQuestionManagement() {
         }
         questionsRes = await questionService.getQuestionsByGroup(groupId);
       } else if (sectionId) {
-        // Fetch section info and questions
+        // [Section View] - Fetch Section Info, Questions AND Groups
         const sectionRes = await quizService.getQuizSectionById(sectionId);
         if (sectionRes.data?.success) {
             title = `Section: ${sectionRes.data.data.title || "Untitled Section"}`;
         }
-        questionsRes = await questionService.getQuestionsBySection(sectionId);
+        
+        // Parallel fetch
+        const [qRes, gRes] = await Promise.all([
+            questionService.getQuestionsBySection(sectionId),
+            quizService.getQuizGroupsBySection(sectionId)
+        ]);
+
+        questionsRes = qRes;
+        if (gRes.data?.success) {
+            setGroups(gRes.data.data || []);
+        }
       }
 
       if (questionsRes?.data?.success) {
@@ -78,7 +99,7 @@ export default function TeacherQuestionManagement() {
 
     } catch (err) {
       console.error(err);
-      setError("Không thể tải dữ liệu câu hỏi.");
+      setError("Không thể tải dữ liệu.");
     } finally {
       setLoading(false);
     }
@@ -87,25 +108,48 @@ export default function TeacherQuestionManagement() {
   const handleCreateSuccess = (newQuestion) => {
     setSuccessMessage("Tạo câu hỏi thành công!");
     setShowSuccessModal(true);
-    fetchData(); // Reload list
+    fetchData(); 
   };
 
   const handleUpdateSuccess = (updatedQuestion) => {
     setSuccessMessage("Cập nhật câu hỏi thành công!");
     setShowSuccessModal(true);
-    fetchData(); // Reload list
+    fetchData();
+  };
+
+  // --- Group Handlers ---
+  const handleGroupEditSuccess = () => {
+      setSuccessMessage("Cập nhật Group thành công!");
+      setShowSuccessModal(true);
+      fetchData();
+  };
+
+  const confirmDeleteGroup = async () => {
+      if (!groupToDelete) return;
+      try {
+          const res = await quizService.deleteQuizGroup(groupToDelete.quizGroupId);
+          if (res.data?.success) {
+              setSuccessMessage("Xóa Group thành công!");
+              setShowSuccessModal(true);
+              setShowGroupDeleteModal(false);
+              fetchData();
+          } else {
+              alert(res.data?.message || "Xóa thất bại");
+          }
+      } catch (err) {
+          console.error(err);
+          alert("Lỗi khi xóa Group");
+      }
   };
 
   // --- Bulk Mode Handlers ---
   const handleSaveDraft = (draftQuestion) => {
       if (questionToUpdate) {
-          // Update existing draft
           const updatedBulk = bulkQuestions.map(q => 
               q.tempId === questionToUpdate.tempId ? { ...draftQuestion, tempId: q.tempId } : q
           );
           setBulkQuestions(updatedBulk);
       } else {
-          // Add new draft
           setBulkQuestions([...bulkQuestions, { ...draftQuestion, tempId: Date.now() }]);
       }
   };
@@ -116,14 +160,8 @@ export default function TeacherQuestionManagement() {
 
   const handleBulkSubmit = async () => {
       if (bulkQuestions.length === 0) return;
-      
       try {
-          // Format payload for bulk create API
-          // API expects: { questions: [ ... ] }
-          const payload = {
-              questions: bulkQuestions.map(({ tempId, ...q }) => q) // Remove tempId
-          };
-
+          const payload = { questions: bulkQuestions.map(({ tempId, ...q }) => q) };
           const res = await questionService.bulkCreateQuestions(payload);
           if (res.data?.success) {
               setSuccessMessage(`Đã tạo thành công ${bulkQuestions.length} câu hỏi!`);
@@ -141,17 +179,24 @@ export default function TeacherQuestionManagement() {
   };
 
   // --- Common Handlers ---
-  const handleEditClick = (question) => {
+  const handleAddQuestion = (targetGroup = null) => {
+      setTargetGroupId(targetGroup ? targetGroup.quizGroupId : null); // If null, it's standalone (or new group creation context)
+      setQuestionToUpdate(null);
+      setShowCreateModal(true);
+  };
+
+  const handleEditQuestion = (question) => {
     setQuestionToUpdate(question);
+    setTargetGroupId(question.quizGroupId); 
     setShowCreateModal(true);
   };
 
-  const handleDeleteClick = (question) => {
+  const handleDeleteQuestion = (question) => {
     setQuestionToDelete(question);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDeleteQuestion = async () => {
     if (!questionToDelete) return;
     try {
       const res = await questionService.deleteQuestion(questionToDelete.questionId);
@@ -170,8 +215,96 @@ export default function TeacherQuestionManagement() {
     }
   };
 
-  const handleBack = () => {
-    navigate(-1); // Go back to previous page (Section Management)
+  // --- Helpers for Display ---
+  const standaloneQuestions = questions.filter(q => !q.quizGroupId);
+  const questionsByGroup = {};
+  questions.forEach(q => {
+      if (q.quizGroupId) {
+          if (!questionsByGroup[q.quizGroupId]) questionsByGroup[q.quizGroupId] = [];
+          questionsByGroup[q.quizGroupId].push(q);
+      }
+  });
+
+  const renderQuestionCard = (q, index, isGrouped = false) => {
+      // Helper to render body content based on type
+      const renderQuestionBody = () => {
+          if (q.type === 5) { // Matching
+              let pairs = [];
+              try {
+                  if (q.matchingPairs) pairs = q.matchingPairs; // from draft
+                  else if (q.correctAnswersJson) pairs = JSON.parse(q.correctAnswersJson);
+              } catch (e) { console.error("Error parsing matching pairs", e); }
+
+              if (pairs.length > 0) {
+                  return (
+                      <div className="mt-2 bg-light p-2 rounded small">
+                          {pairs.map((p, i) => (
+                              <div key={i} className="d-flex align-items-center gap-2 mb-1">
+                                  <span className="fw-bold text-dark">{p.key}</span>
+                                  <span className="text-muted">➡</span>
+                                  <span className="text-dark">{p.value}</span>
+                              </div>
+                          ))}
+                      </div>
+                  );
+              }
+          }
+          
+          if (q.type === 6) { // Ordering
+              return (
+                  <ol className="mt-2 ps-3 mb-0 small">
+                      {q.options?.map((opt, idx) => (
+                          <li key={idx} className="mb-1 text-dark">
+                              {opt.text}
+                          </li>
+                      ))}
+                  </ol>
+              );
+          }
+
+          // Default (MCQ, FillBlank, etc.)
+          return (
+            <ul className="list-unstyled options-preview mb-0 small text-muted mt-2">
+                {q.options?.map((opt, idx) => (
+                    <li key={idx} className={`mb-1 ${opt.isCorrect ? "text-success fw-bold" : ""}`}>
+                        {opt.isCorrect && "✓ "} {opt.text}
+                    </li>
+                ))}
+            </ul>
+          );
+      };
+
+      return (
+        <Card key={isBulkMode ? q.tempId : q.questionId} className={`mb-3 border-0 shadow-sm question-card ${isBulkMode ? 'border-start border-4 border-warning' : ''}`}>
+            <Card.Body className="p-3">
+                <div className="d-flex justify-content-between">
+                <div className="d-flex gap-3 w-100">
+                    <div className="question-index text-center pt-1">
+                        <span className={`badge rounded-pill ${isBulkMode ? 'bg-warning text-dark' : 'bg-secondary'}`}>#{index + 1}</span>
+                    </div>
+                    <div className="flex-grow-1">
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                            <Badge bg="info">{QUESTION_TYPES_LABEL[q.type] || "Unknown"}</Badge>
+                            <span className="text-muted small">Points: {q.points}</span>
+                            {isBulkMode && <Badge bg="warning" className="text-dark">Draft</Badge>}
+                        </div>
+                        <h6 className="question-stem mb-1 fw-bold text-break">{q.stemText}</h6>
+                        {renderQuestionBody()}
+                    </div>
+                </div>
+
+                <div className="action-buttons d-flex flex-column gap-2 justify-content-start ms-2">
+                    <Button variant="light" size="sm" onClick={() => handleEditQuestion(q)} title="Sửa">
+                    <FaEdit className="text-primary" />
+                    </Button>
+                    <Button variant="light" size="sm" onClick={() => isBulkMode ? handleDeleteDraft(q.tempId) : handleDeleteQuestion(q)} title="Xóa">
+                    <FaTrash className="text-danger" />
+                    </Button>
+                </div>
+                </div>
+            </Card.Body>
+        </Card>
+      );
   };
 
   return (
@@ -180,118 +313,111 @@ export default function TeacherQuestionManagement() {
       <div className="teacher-question-management-container">
         <Container>
           {/* Header */}
-          <div className="question-header-section">
-            <div className="d-flex align-items-center">
-              <Button variant="outline-secondary" className="me-3" onClick={handleBack}>
-                <FaArrowLeft /> Quay lại
-              </Button>
+          <div className="question-header-section mb-4">
+            <div className="d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center">
+                  <Button variant="outline-secondary" className="me-3" onClick={() => navigate(-1)}>
+                    <FaArrowLeft /> Quay lại
+                  </Button>
+                  <div>
+                    <h2 className="mb-0 text-primary fw-bold">Quản lý câu hỏi</h2>
+                    <div className="text-muted small">
+                      {contextData.title}
+                    </div>
+                  </div>
+              </div>
               <div>
-                <h2 className="mb-0 text-primary fw-bold">Quản lý câu hỏi</h2>
-                <div className="text-muted">
-                  {contextData.title} {contextData.subtitle && `- ${contextData.subtitle}`}
-                </div>
+                  {/* Global Actions */}
+                  {!isBulkMode ? (
+                        <div className="d-flex gap-2">
+                            <Button variant="primary" onClick={() => handleAddQuestion(null)}>
+                                <FaPlus className="me-2" /> Tạo mới (Câu hỏi/Group)
+                            </Button>
+                            <Button variant="outline-primary" onClick={() => setIsBulkMode(true)}>
+                                ++ Soạn nhiều câu
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="d-flex gap-2">
+                            <Button variant="outline-secondary" onClick={() => setIsBulkMode(false)}>Hủy bỏ</Button>
+                            <Button variant="success" onClick={() => handleAddQuestion(null)}><FaPlus className="me-2" /> Thêm vào DS</Button>
+                            <Button variant="primary" onClick={handleBulkSubmit} disabled={bulkQuestions.length === 0}>
+                                Lưu tất cả ({bulkQuestions.length})
+                            </Button>
+                        </div>
+                    )}
               </div>
             </div>
           </div>
 
-          {/* Toolbar */}
-          <Card className="mb-4 shadow-sm border-0">
-            <Card.Body className="d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-3">
-                 <span className="fw-bold align-self-center">
-                     {isBulkMode ? `Đang soạn: ${bulkQuestions.length} câu` : `Tổng số: ${questions.length} câu hỏi`}
-                 </span>
-              </div>
-              <div className="d-flex gap-2">
-                {!isBulkMode ? (
-                    <>
-                        <Button variant="primary" onClick={() => { setQuestionToUpdate(null); setShowCreateModal(true); }}>
-                        <FaPlus className="me-2" /> Thêm câu hỏi
-                        </Button>
-                        <Button variant="outline-primary" onClick={() => setIsBulkMode(true)}>
-                        ++ Chế độ tạo nhiều
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <Button variant="outline-secondary" onClick={() => setIsBulkMode(false)}>
-                            Hủy bỏ
-                        </Button>
-                        <Button variant="success" onClick={() => { setQuestionToUpdate(null); setShowCreateModal(true); }}>
-                             <FaPlus className="me-2" /> Thêm vào DS
-                        </Button>
-                        <Button variant="primary" onClick={handleBulkSubmit} disabled={bulkQuestions.length === 0}>
-                            Lưu tất cả ({bulkQuestions.length})
-                        </Button>
-                    </>
-                )}
-              </div>
-            </Card.Body>
-          </Card>
-
           {/* Content */}
           {loading ? (
-             <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status"></div>
-             </div>
+             <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>
           ) : error ? (
             <div className="alert alert-danger">{error}</div>
           ) : (
-            <div className="question-list">
-                {isBulkMode && bulkQuestions.length === 0 && (
-                    <div className="alert alert-info text-center">
-                        Bạn đang ở chế độ <strong>Tạo hàng loạt</strong>. Hãy bấm "Thêm vào DS" để bắt đầu soạn câu hỏi. 
-                        Các câu hỏi sẽ được lưu tạm thời tại đây trước khi gửi lên hệ thống.
+            <div className="question-content-area">
+                
+                {/* 1. Standalone Questions */}
+                {standaloneQuestions.length > 0 && (
+                    <div className="mb-4">
+                        <h5 className="text-muted border-bottom pb-2 mb-3">Câu hỏi lẻ ({standaloneQuestions.length})</h5>
+                        {standaloneQuestions.map((q, idx) => renderQuestionCard(q, idx))}
                     </div>
                 )}
-                
-                {/* List Logic depends on Mode */}
-                {(isBulkMode ? bulkQuestions : questions).map((q, index) => (
-                    <Card key={isBulkMode ? q.tempId : q.questionId} className={`mb-3 border-0 shadow-sm question-card ${isBulkMode ? 'border-start border-4 border-warning' : ''}`}>
-                    <Card.Body>
-                        <div className="d-flex justify-content-between">
-                        <div className="d-flex gap-3">
-                            <div className="question-index text-center">
-                                <span className={`badge rounded-pill ${isBulkMode ? 'bg-warning text-dark' : 'bg-secondary'}`}>#{index + 1}</span>
-                            </div>
-                            <div className="flex-grow-1">
-                            <div className="d-flex align-items-center gap-2 mb-2">
-                                <Badge bg="info">{QUESTION_TYPES_LABEL[q.type] || "Unknown"}</Badge>
-                                <span className="text-muted small">Points: {q.points}</span>
-                                {isBulkMode && <Badge bg="warning" className="text-dark">Draft</Badge>}
-                            </div>
-                            <h5 className="question-stem mb-3">{q.stemText}</h5>
-                            
-                            {/* Expanded details */}
-                            <ul className="list-unstyled options-preview">
-                                {q.options?.map((opt, idx) => (
-                                    <li key={idx} className={`mb-1 ${opt.isCorrect ? "text-success fw-bold" : "text-muted"}`}>
-                                        {opt.isCorrect && "✓ "} {opt.text}
-                                    </li>
-                                ))}
-                            </ul>
-                            </div>
-                        </div>
 
-                        <div className="action-buttons d-flex flex-column gap-2">
-                            <Button variant="light" size="sm" onClick={() => handleEditClick(q)} title="Sửa">
-                            <FaEdit className="text-primary" />
-                            </Button>
-                            <Button variant="light" size="sm" onClick={() => isBulkMode ? handleDeleteDraft(q.tempId) : handleDeleteClick(q)} title="Xóa">
-                            <FaTrash className="text-danger" />
-                            </Button>
+                {/* 2. Groups Display */}
+                {groups.map((group) => {
+                    const groupQuestions = questionsByGroup[group.quizGroupId] || [];
+                    return (
+                        <div key={group.quizGroupId} className="mb-5 group-container">
+                            {/* Group Header Bar */}
+                            <div className="group-header-bar bg-light border rounded p-3 mb-3 d-flex justify-content-between align-items-center shadow-sm" style={{borderLeft: '5px solid #0d6efd'}}>
+                                <div>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <FaLayerGroup className="text-primary"/>
+                                        <h5 className="mb-0 fw-bold text-primary">{group.name}</h5>
+                                        <Badge bg="secondary">Total: {group.sumScore} pts</Badge>
+                                    </div>
+                                    <div className="text-muted small mt-1">{group.title}</div>
+                                </div>
+                                <div className="d-flex gap-2">
+                                    <Button variant="outline-primary" size="sm" onClick={() => handleAddQuestion(group)}>
+                                        <FaPlus className="me-1"/> Thêm câu hỏi vào nhóm
+                                    </Button>
+                                    <Button variant="outline-secondary" size="sm" onClick={() => { setGroupToUpdate(group); setShowGroupEditModal(true); }}>
+                                        <FaEdit />
+                                    </Button>
+                                    <Button variant="outline-danger" size="sm" onClick={() => { setGroupToDelete(group); setShowGroupDeleteModal(true); }}>
+                                        <FaTrash />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Group Questions List (Indented) */}
+                            <div className="group-questions-list ps-4 ms-2 border-start border-3 border-light">
+                                {groupQuestions.length === 0 ? (
+                                    <div className="text-muted fst-italic py-2 ps-3">Chưa có câu hỏi nào trong nhóm này.</div>
+                                ) : (
+                                    groupQuestions.map((q, idx) => renderQuestionCard(q, idx, true))
+                                )}
+                            </div>
                         </div>
-                        </div>
-                    </Card.Body>
-                    </Card>
-                ))}
-                
-                {!isBulkMode && questions.length === 0 && (
+                    );
+                })}
+
+                {/* Bulk Drafts */}
+                {isBulkMode && bulkQuestions.length > 0 && (
+                     <div className="mt-5 pt-3 border-top border-warning">
+                        <h5 className="text-warning fw-bold">Bản nháp ({bulkQuestions.length})</h5>
+                        {bulkQuestions.map((q, idx) => renderQuestionCard(q, idx))}
+                     </div>
+                )}
+
+                {!isBulkMode && questions.length === 0 && groups.length === 0 && (
                     <div className="text-center py-5 text-muted bg-light rounded">
-                    <p className="mb-3">Chưa có câu hỏi nào trong mục này.</p>
-                    <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-                        Tạo câu hỏi đầu tiên
-                    </Button>
+                        <p className="mb-3">Chưa có nội dung nào.</p>
+                        <Button variant="primary" onClick={() => handleAddQuestion(null)}>Tạo nội dung đầu tiên</Button>
                     </div>
                 )}
             </div>
@@ -299,31 +425,50 @@ export default function TeacherQuestionManagement() {
         </Container>
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Question Modal */}
       <CreateQuestionModal 
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={questionToUpdate ? handleUpdateSuccess : handleCreateSuccess}
         sectionId={sectionId ? parseInt(sectionId) : null}
-        groupId={groupId ? parseInt(groupId) : null}
+        groupId={targetGroupId || (groupId ? parseInt(groupId) : null)}
         questionToUpdate={questionToUpdate}
         isBulkMode={isBulkMode}
         onSaveDraft={handleSaveDraft}
       />
+      
+      {/* Group Modals */}
+      <CreateQuizGroupModal
+          show={showGroupEditModal}
+          onClose={() => setShowGroupEditModal(false)}
+          onSuccess={handleGroupEditSuccess}
+          quizSectionId={sectionId}
+          groupToUpdate={groupToUpdate}
+      />
 
-      {/* Delete Confirmation */}
+      <ConfirmModal 
+        isOpen={showGroupDeleteModal}
+        onClose={() => setShowGroupDeleteModal(false)}
+        onConfirm={confirmDeleteGroup}
+        title="Xóa Group?"
+        message="Bạn có chắc chắn muốn xóa Group này? Tất cả câu hỏi trong Group cũng sẽ bị xóa."
+        confirmText="Xóa Group"
+        cancelText="Hủy"
+        type="danger"
+      />
+
+      {/* Question Delete */}
       <ConfirmModal 
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDelete}
+        onConfirm={confirmDeleteQuestion}
         title="Xóa câu hỏi?"
-        message="Bạn có chắc chắn muốn xóa câu hỏi này không? Hành động này không thể hoàn tác."
+        message="Hành động này không thể hoàn tác."
         confirmText="Xóa"
         cancelText="Hủy"
         type="danger"
       />
 
-      {/* Success Notification */}
       <SuccessModal 
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}

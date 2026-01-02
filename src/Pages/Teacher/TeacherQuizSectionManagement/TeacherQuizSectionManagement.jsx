@@ -285,18 +285,24 @@ export default function TeacherQuizSectionManagement() {
                   <div key={sectionId} className="section-card mb-4">
                     <div className="section-header">
                       <div className="section-info">
-                        <h3 className="section-title">{sectionTitle}</h3>
+                        <h3 
+                            className="section-title text-primary cursor-pointer" 
+                            onClick={() => handleManageQuestionsSection(sectionId)}
+                            style={{cursor: 'pointer'}}
+                        >
+                            {sectionTitle}
+                        </h3>
                         {sectionDescription && (
                           <p className="section-description text-muted">{sectionDescription}</p>
                         )}
                       </div>
                       <div className="section-actions">
                         <button
-                          className="btn btn-info text-white me-2"
+                          className="btn btn-primary text-white me-2"
                           onClick={() => handleManageQuestionsSection(sectionId)}
-                          title="Quản lý câu hỏi lẻ"
+                          title="Quản lý nội dung (Câu hỏi & Nhóm)"
                         >
-                          <FaList className="me-1" /> Câu hỏi lẻ
+                          <FaList className="me-1" /> Quản lý nội dung
                         </button>
                         <button
                           className="btn btn-edit-section"
@@ -313,72 +319,6 @@ export default function TeacherQuizSectionManagement() {
                           <FaTrash />
                         </button>
                       </div>
-                    </div>
-
-                    {/* Groups in Section */}
-                    <div className="groups-section mt-3">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="mb-0">Các nhóm câu hỏi</h5>
-                        <button
-                          className="btn btn-sm btn-success"
-                          onClick={() => handleCreateGroupClick(section)}
-                        >
-                          <FaPlus className="me-1" />
-                          Tạo Group mới
-                        </button>
-                      </div>
-
-                      {groups.length === 0 ? (
-                        <div className="text-center text-muted py-3">
-                          <p className="mb-0">Chưa có Group nào trong Section này</p>
-                        </div>
-                      ) : (
-                        <div className="groups-list">
-                          {groups.map((group) => {
-                            const groupId = group.quizGroupId || group.QuizGroupId;
-                            const groupName = group.name || group.Name || "Untitled Group";
-                            const groupTitle = group.title || group.Title;
-                            const groupSumScore = group.sumScore !== undefined ? group.sumScore : (group.SumScore !== undefined ? group.SumScore : 0);
-
-                            return (
-                              <div key={groupId} className="group-card">
-                                <div className="d-flex justify-content-between align-items-start">
-                                  <div className="flex-grow-1">
-                                    <h6 className="mb-1 fw-semibold">{groupName}</h6>
-                                    {groupTitle && (
-                                      <p className="text-muted small mb-1">{groupTitle}</p>
-                                    )}
-                                    <span className="badge bg-info">Tổng điểm: {groupSumScore}</span>
-                                  </div>
-                                  <div className="group-actions">
-                                    <button
-                                      className="btn btn-sm btn-info text-white me-2"
-                                      onClick={() => handleManageQuestionsGroup(groupId)}
-                                      title="Quản lý câu hỏi"
-                                    >
-                                       <FaList />
-                                    </button>
-                                    <button
-                                      className="btn btn-edit-group"
-                                      onClick={() => handleEditGroup(group)}
-                                      title="Sửa Group"
-                                    >
-                                      <FaEdit />
-                                    </button>
-                                    <button
-                                      className="btn btn-delete-group"
-                                      onClick={() => handleDeleteGroupClick(group)}
-                                      title="Xóa Group"
-                                    >
-                                      <FaTrash />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
