@@ -35,16 +35,17 @@ import QuizDetail from "../Pages/QuizDetail/QuizDetail";
 import QuizResults from "../Pages/QuizResults/QuizResults";
 import EssayDetail from "../Pages/EssayDetail/EssayDetail";
 import PronunciationDetail from "../Pages/PronunciationDetail/PronunciationDetail";
-import CourseManagement from "../Pages/Teacher/CourseManagement";
-import TeacherCourseDetail from "../Pages/Teacher/TeacherCourseDetail";
-import TeacherLessonDetail from "../Pages/Teacher/TeacherLessonDetail";
-import TeacherStudentManagement from "../Pages/Teacher/TeacherStudentManagement";
+import CourseManagement from "../Pages/Teacher/TeacherCourseManagement/CourseManagement";
+import TeacherCourseDetail from "../Pages/Teacher/TeacherCourseDetail/TeacherCourseDetail";
+import TeacherLessonDetail from "../Pages/Teacher/TeacherLessonDetail/TeacherLessonDetail";
+import TeacherStudentManagement from "../Pages/Teacher/TeacherStudentManagement/TeacherStudentManagement";
 import TeacherModuleLectureDetail from "../Pages/Teacher/TeacherModuleLectureDetail/TeacherModuleLectureDetail";
 import EditLecture from "../Pages/Teacher/TeacherModuleLectureDetail/EditLecture";
 import TeacherModuleFlashCardDetail from "../Pages/Teacher/TeacherModuleFlashCardDetail/TeacherModuleFlashCardDetail";
 import TeacherQuizEssayManagement from "../Pages/Teacher/TeacherQuizEssayManagement/TeacherQuizEssayManagement";
 import TeacherQuizSectionManagement from "../Pages/Teacher/TeacherQuizSectionManagement/TeacherQuizSectionManagement";
 import TeacherQuestionManagement from "../Pages/Teacher/TeacherQuestionManagement/TeacherQuestionManagement";
+import TeacherSubmissionManagement from "../Pages/Teacher/TeacherSubmissionManagement/TeacherSubmissionManagement";
 
 // Admin Imports
 import AdminLayout from "../Layouts/AdminLayout/AdminLayout";
@@ -107,6 +108,7 @@ export default function AppRoutes() {
       {/* Teacher routes */}
       <Route path="/teacher" element={<CourseManagement />} />
       <Route path="/teacher/account-management" element={<CourseManagement />} />
+      <Route path="/teacher/submission-management" element={<TeacherSubmissionManagement />} />
       <Route path="/teacher/course-management" element={<CourseManagement />} />
       <Route path="/teacher/course/:courseId/students" element={<TeacherStudentManagement />} />
       <Route path="/teacher/course/:courseId/lesson/:lessonId" element={<TeacherLessonDetail />} />

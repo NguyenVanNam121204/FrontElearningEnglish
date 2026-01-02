@@ -1,5 +1,5 @@
 .assessment-detail-container {
-    padding: 2rem 0;
-    min-height: calc(100vh - 60px);
+    padding: calc(2rem + 70px) 0 2rem 0; /* Add header height (70px) to top padding */
+    min-height: calc(100vh - 70px);
     background-color: #f8f9fa;
 }
