@@ -43,109 +43,146 @@ export default function AssessmentInfoModal({
 
         try {
             const assessmentId = assessment.assessmentId || assessment.AssessmentId;
-            
-            // Check both quiz and essay by calling APIs (don't rely on title)
-            let hasQuiz = false;
-            let hasEssay = false;
+            const type = assessment.type; // 'quiz' or 'essay' passed from parent
 
-            // Check if assessment has quiz
-            try {
-                const quizResponse = await quizService.getByAssessment(assessmentId);
-                if (quizResponse.data?.success && quizResponse.data?.data) {
-                    // Handle both array and single object response
-                    const quizData = Array.isArray(quizResponse.data.data) ? quizResponse.data.data : [quizResponse.data.data];
-                    if (quizData.length > 0) {
-                        hasQuiz = true;
-                        setQuiz(quizData[0]); // Lấy quiz đầu tiên
-                        
-                        // Check for in-progress attempt
-                        setCheckingProgress(true);
-                        const quizId = quizData[0].quizId || quizData[0].QuizId;
-                        console.log("🔍 [AssessmentInfoModal] Checking in-progress attempt for quizId:", quizId);
-                        
-                        const savedProgress = localStorage.getItem(`quiz_in_progress_${quizId}`);
-                        if (savedProgress) {
-                            try {
-                                const progress = JSON.parse(savedProgress);
-                                if (progress.attemptId) {
-                                    console.log("💾 [AssessmentInfoModal] Found saved progress, verifying with backend:", progress.attemptId);
-                                    
-                                    // Verify attempt is still valid by calling resume API
-                                    try {
-                                        const resumeResponse = await quizAttemptService.resume(progress.attemptId);
-                                        console.log("📥 [AssessmentInfoModal] RESUME API response:", resumeResponse.data);
-                                        
-                                        if (resumeResponse.data?.success && resumeResponse.data?.data) {
-                                            const attempt = resumeResponse.data.data;
-                                            const status = attempt.Status || attempt.status;
-                                            console.log("📊 [AssessmentInfoModal] Attempt status:", status);
-                                            
-                                            if (isInProgress(status)) {
-                                                setInProgressAttempt(progress);
-                                                console.log("✅ [AssessmentInfoModal] In-progress attempt verified:", progress.attemptId);
-                                            } else {
-                                                localStorage.removeItem(`quiz_in_progress_${quizId}`);
-                                                console.log("🗑️ [AssessmentInfoModal] Attempt already submitted, removed from localStorage");
-                                            }
-                                        } else {
-                                            localStorage.removeItem(`quiz_in_progress_${quizId}`);
-                                            console.log("🗑️ [AssessmentInfoModal] Resume failed, removed from localStorage");
-                                        }
-                                    } catch (err) {
-                                        console.error("❌ [AssessmentInfoModal] Error verifying attempt:", err);
-                                        console.error("Error details:", {
-                                            message: err.message,
-                                            response: err.response?.data,
-                                            status: err.response?.status
-                                        });
-                                        
-                                        // Nếu 404 hoặc 400, xóa khỏi localStorage
-                                        if (err.response?.status === 404 || err.response?.status === 400) {
-                                            localStorage.removeItem(`quiz_in_progress_${quizId}`);
-                                            console.log("🗑️ [AssessmentInfoModal] Attempt not found or submitted, removed from localStorage");
-                                        }
-                                    }
-                                }
-                            } catch (err) {
-                                console.error("❌ [AssessmentInfoModal] Error parsing saved progress:", err);
-                                localStorage.removeItem(`quiz_in_progress_${quizId}`);
-                            }
+            // Check based on Type if available
+            if (type === 'quiz') {
+                try {
+                    // Fetch Quiz Info specifically
+                    // We already have the quiz object passed in 'assessment' prop (merged in parent)
+                    // But to be safe and get full details (like questions count, time limit from DB), we fetch by ID if possible
+                    // Or fetch by Assessment if we only have assessmentId
+                    
+                    const quizResponse = await quizService.getByAssessment(assessmentId);
+                    if (quizResponse.data?.success && quizResponse.data?.data) {
+                        const quizData = Array.isArray(quizResponse.data.data) ? quizResponse.data.data : [quizResponse.data.data];
+                        // Filter specific quiz if quizId is passed, otherwise take first
+                        const targetQuiz = assessment.quizId 
+                            ? quizData.find(q => (q.quizId || q.QuizId) === assessment.quizId) 
+                            : quizData[0];
+
+                        if (targetQuiz) {
+                            setQuiz(targetQuiz);
+                            // Check progress for this specific quiz
+                            checkQuizProgress(targetQuiz.quizId || targetQuiz.QuizId);
                         } else {
-                            console.log("❌ [AssessmentInfoModal] No saved progress in localStorage for quizId:", quizId);
+                            setError("Không tìm thấy thông tin quiz");
                         }
-                        setCheckingProgress(false);
                     }
+                } catch (err) {
+                    console.error("Error fetching quiz:", err);
+                    setError("Lỗi tải thông tin quiz");
                 }
-            } catch (err) {
-                console.error("❌ [AssessmentInfoModal] Error fetching quiz:", err);
-                setCheckingProgress(false);
+            } else if (type === 'essay') {
+                try {
+                    const essayResponse = await essayService.getByAssessment(assessmentId);
+                    if (essayResponse.data?.success && essayResponse.data?.data) {
+                        const essayData = Array.isArray(essayResponse.data.data) ? essayResponse.data.data : [essayResponse.data.data];
+                        const targetEssay = assessment.essayId 
+                            ? essayData.find(e => (e.essayId || e.EssayId) === assessment.essayId)
+                            : essayData[0];
+
+                        if (targetEssay) {
+                            setEssay(targetEssay);
+                        } else {
+                            setError("Không tìm thấy thông tin essay");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error fetching essay:", err);
+                    setError("Lỗi tải thông tin essay");
+                }
+            } else {
+                // Fallback: Check both (Legacy logic)
+                await fetchBoth(assessmentId);
             }
 
-            // Check if assessment has essay
-            try {
-                const essayResponse = await essayService.getByAssessment(assessmentId);
-                if (essayResponse.data?.success && essayResponse.data?.data) {
-                    // Handle both array and single object response
-                    const essayData = Array.isArray(essayResponse.data.data) ? essayResponse.data.data : [essayResponse.data.data];
-                    if (essayData.length > 0) {
-                        hasEssay = true;
-                        setEssay(essayData[0]); // Lấy essay đầu tiên
-                    }
-                }
-            } catch (err) {
-                console.error("❌ [AssessmentInfoModal] Error fetching essay:", err);
-            }
-
-            // If neither quiz nor essay found, show error
-            if (!hasQuiz && !hasEssay) {
-                setError("Không tìm thấy quiz hoặc essay cho assessment này");
-            }
         } catch (err) {
             console.error("Error fetching assessment details:", err);
             setError("Không thể tải thông tin chi tiết");
         } finally {
             setLoading(false);
         }
+    };
+
+    const checkQuizProgress = async (rawQuizId) => {
+        setCheckingProgress(true);
+        const quizId = parseInt(rawQuizId); // Force int
+        console.log("🔍 [AssessmentInfoModal] Checking progress for quizId:", quizId);
+        
+        const savedKey = `quiz_in_progress_${quizId}`;
+        const savedProgress = localStorage.getItem(savedKey);
+        
+        console.log(`📂 [LocalStorage] Key: ${savedKey}, Value:`, savedProgress ? "Found" : "Null");
+
+        if (savedProgress) {
+            try {
+                const progress = JSON.parse(savedProgress);
+                console.log("📄 Parsed:", progress);
+
+                if (progress.attemptId) {
+                    console.log("📞 Calling Resume API for attempt:", progress.attemptId);
+                    try {
+                        const resumeResponse = await quizAttemptService.resume(progress.attemptId);
+                        console.log("📥 Resume API Result:", resumeResponse.data);
+
+                        if (resumeResponse.data?.success && resumeResponse.data?.data) {
+                            const attempt = resumeResponse.data.data;
+                            const status = attempt.Status !== undefined ? attempt.Status : attempt.status;
+                            console.log("📊 Attempt Status:", status);
+                            
+                            // Check if Started (0) or InProgress (1)
+                            if (status === 0 || status === 1) {
+                                console.log("✅ Valid InProgress Attempt Found!");
+                                setInProgressAttempt(progress);
+                            } else {
+                                console.warn("❌ Status not resumable (Not 0 or 1)");
+                                localStorage.removeItem(savedKey);
+                            }
+                        } else {
+                            console.warn("❌ Resume API failed logic");
+                            localStorage.removeItem(savedKey);
+                        }
+                    } catch (err) {
+                        console.error("❌ Resume API Error:", err);
+                        if (err.response?.status === 404 || err.response?.status === 400) {
+                            localStorage.removeItem(savedKey);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("❌ JSON Parse Error");
+                localStorage.removeItem(savedKey);
+            }
+        }
+        setCheckingProgress(false);
+    };
+
+    const fetchBoth = async (assessmentId) => {
+        // ... (Original logic for checking both)
+        // Check quiz
+        try {
+            const quizResponse = await quizService.getByAssessment(assessmentId);
+            if (quizResponse.data?.success && quizResponse.data?.data) {
+                const quizData = Array.isArray(quizResponse.data.data) ? quizResponse.data.data : [quizResponse.data.data];
+                if (quizData.length > 0) {
+                    setQuiz(quizData[0]);
+                    checkQuizProgress(quizData[0].quizId || quizData[0].QuizId);
+                    return; // Prioritize Quiz if found
+                }
+            }
+        } catch (e) {}
+
+        // Check essay
+        try {
+            const essayResponse = await essayService.getByAssessment(assessmentId);
+            if (essayResponse.data?.success && essayResponse.data?.data) {
+                const essayData = Array.isArray(essayResponse.data.data) ? essayResponse.data.data : [essayResponse.data.data];
+                if (essayData.length > 0) {
+                    setEssay(essayData[0]);
+                }
+            }
+        } catch (e) {}
     };
 
     const formatTimeLimit = (timeLimit) => {
