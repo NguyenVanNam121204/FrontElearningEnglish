@@ -49,6 +49,7 @@ import TeacherQuestionManagement from "../Pages/Teacher/TeacherQuestionManagemen
 import AdminLayout from "../Layouts/AdminLayout/AdminLayout";
 import AdminDashboard from "../Pages/Admin/Dashboard/AdminDashboard";
 import AdminCourseList from "../Pages/Admin/CourseManagement/AdminCourseList";
+import AdminCourseDetail from "../Pages/Admin/CourseManagement/Detail/AdminCourseDetail";
 import AdminUserList from "../Pages/Admin/UserManagement/AdminUserList";
 
 /**
@@ -121,6 +122,7 @@ export default function AppRoutes() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="courses" element={<AdminCourseList />} />
+        <Route path="courses/:courseId" element={<AdminCourseDetail />} />
         <Route path="users" element={<AdminUserList />} />
         <Route path="finance" element={<AdminDashboard />} />
       </Route>
