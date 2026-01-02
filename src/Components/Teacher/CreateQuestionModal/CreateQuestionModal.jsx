@@ -37,13 +37,28 @@ const CreateQuestionModal = ({
 
   useEffect(() => {
     if (show) {
-      if (!internalGroupId) setInternalGroupId(groupId); // Sync props to state on open
+      // Reset generic state on open
       setActiveTab("question");
-      
-      // Fetch data based on current internal state
-      if (internalGroupId) {
-          fetchGroupDetails(internalGroupId);
+      setCreatedGroupName("");
+      setQError("");
+
+      // Determine proper Group ID context
+      let targetGId = null;
+      if (questionToUpdate) {
+          targetGId = questionToUpdate.quizGroupId || questionToUpdate.QuizGroupId; // Handle case naming
+      } else {
+          targetGId = groupId;
       }
+      
+      setInternalGroupId(targetGId);
+
+      // Fetch Context Data
+      if (targetGId) {
+          fetchGroupDetails(targetGId);
+      } else {
+          setGroupInfo(null); // Clear group info if no group
+      }
+
       if (sectionId) {
           fetchSectionDetails(sectionId);
       }
@@ -51,8 +66,12 @@ const CreateQuestionModal = ({
       if (!questionToUpdate) {
         resetQuestionForm(QUESTION_TYPES.MultipleChoice);
       }
+    } else {
+        // Optional: Reset on close to be safe
+        setInternalGroupId(null);
+        setGroupInfo(null);
     }
-  }, [show, groupId, sectionId, internalGroupId]); // Added internalGroupId to dependencies
+  }, [show, groupId, sectionId, questionToUpdate]); // Removed internalGroupId from deps to prevent loops
 
   const fetchGroupDetails = async (id) => {
       try {
