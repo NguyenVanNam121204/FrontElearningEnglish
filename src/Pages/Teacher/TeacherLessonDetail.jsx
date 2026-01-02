@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "./TeacherLessonDetail.css";
 import TeacherHeader from "../../Components/Header/TeacherHeader";
 import { useAuth } from "../../Context/AuthContext";
+import { useModuleTypes } from "../../hooks/useModuleTypes";
 import { teacherService } from "../../Services/teacherService";
 import { lectureService } from "../../Services/lectureService";
 import { flashcardService } from "../../Services/flashcardService";
@@ -13,6 +14,7 @@ import { essayService } from "../../Services/essayService";
 import { mochiLessonTeacher, mochiModuleTeacher } from "../../Assets/Logo";
 import CreateLessonModal from "../../Components/Teacher/CreateLessonModal/CreateLessonModal";
 import CreateModuleModal from "../../Components/Teacher/CreateModuleModal/CreateModuleModal";
+import CreateAssessmentModal from "../../Components/Teacher/CreateAssessmentModal/CreateAssessmentModal";
 import SuccessModal from "../../Components/Common/SuccessModal/SuccessModal";
 import { FaPlus, FaArrowLeft, FaEdit } from "react-icons/fa";
 import { ROUTE_PATHS } from "../../Routes/Paths";
@@ -21,6 +23,7 @@ export default function TeacherLessonDetail() {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
   const { user, roles, isAuthenticated } = useAuth();
+  const { isLecture, isFlashCard, isAssessment, isClickable, getModuleTypePath } = useModuleTypes();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [modules, setModules] = useState([]);
@@ -34,6 +37,11 @@ export default function TeacherLessonDetail() {
   const [loadingModuleDetail, setLoadingModuleDetail] = useState(false);
   const [showModuleSuccessModal, setShowModuleSuccessModal] = useState(false);
   const [showUpdateModuleSuccessModal, setShowUpdateModuleSuccessModal] = useState(false);
+  const [showCreateAssessmentModal, setShowCreateAssessmentModal] = useState(false);
+  const [showCreateAssessmentSuccessModal, setShowCreateAssessmentSuccessModal] = useState(false);
+  const [showUpdateAssessmentModal, setShowUpdateAssessmentModal] = useState(false);
+  const [showUpdateAssessmentSuccessModal, setShowUpdateAssessmentSuccessModal] = useState(false);
+  const [assessmentToUpdate, setAssessmentToUpdate] = useState(null);
 
   // Module content state
   const [selectedModule, setSelectedModule] = useState(null);
@@ -44,18 +52,7 @@ export default function TeacherLessonDetail() {
 
   const isTeacher = roles.includes("Teacher") || user?.teacherSubscription?.isTeacher === true;
 
-  useEffect(() => {
-    if (!isAuthenticated || !isTeacher) {
-      navigate("/home");
-      return;
-    }
-
-    fetchCourseDetail();
-    fetchLessonDetail();
-    fetchModules();
-  }, [isAuthenticated, isTeacher, navigate, courseId, lessonId]);
-
-  const fetchCourseDetail = async () => {
+  const fetchCourseDetail = useCallback(async () => {
     try {
       const response = await teacherService.getCourseDetail(courseId);
       if (response.data?.success && response.data?.data) {
@@ -64,9 +61,9 @@ export default function TeacherLessonDetail() {
     } catch (err) {
       console.error("Error fetching course detail:", err);
     }
-  };
+  }, [courseId]);
 
-  const fetchLessonDetail = async () => {
+  const fetchLessonDetail = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -84,9 +81,9 @@ export default function TeacherLessonDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lessonId]);
 
-  const fetchModules = async () => {
+  const fetchModules = useCallback(async () => {
     try {
       const response = await teacherService.getModulesByLesson(lessonId);
       if (response.data?.success && response.data?.data) {
@@ -125,7 +122,18 @@ export default function TeacherLessonDetail() {
       console.error("Error fetching modules:", err);
       setModules([]);
     }
-  };
+  }, [lessonId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isTeacher) {
+      navigate("/home");
+      return;
+    }
+
+    fetchCourseDetail();
+    fetchLessonDetail();
+    fetchModules();
+  }, [isAuthenticated, isTeacher, navigate, fetchCourseDetail, fetchLessonDetail, fetchModules]);
 
   const handleUpdateSuccess = () => {
     setShowUpdateModal(false);
@@ -151,7 +159,7 @@ export default function TeacherLessonDetail() {
     try {
       const moduleId = module.moduleId || module.ModuleId;
 
-      if (contentTypeNum === 1) {
+      if (isLecture(contentTypeNum)) {
         // Lecture module - fetch lectures
         const response = await lectureService.getTeacherLecturesByModule(moduleId);
 
@@ -161,7 +169,7 @@ export default function TeacherLessonDetail() {
           setContentError("Không thể tải danh sách lectures");
           setModuleContent([]);
         }
-      } else if (contentTypeNum === 4) {
+      } else if (isFlashCard(contentTypeNum)) {
         // FlashCard module - fetch flashcards
         const response = await flashcardService.getTeacherFlashcardsByModule(moduleId);
 
@@ -171,8 +179,8 @@ export default function TeacherLessonDetail() {
           setContentError("Không thể tải danh sách flashcards");
           setModuleContent([]);
         }
-      } else if (contentTypeNum === 3) {
-        // Assignment/Assessment module - fetch assessments
+      } else if (isAssessment(contentTypeNum)) {
+        // Assessment module - fetch assessments
         const response = await assessmentService.getTeacherAssessmentsByModule(moduleId);
 
         if (response.data?.success && response.data?.data) {
@@ -252,53 +260,6 @@ export default function TeacherLessonDetail() {
     navigate(ROUTE_PATHS.TEACHER_EDIT_FLASHCARD(courseId, lessonId, moduleId, flashcardId));
   };
 
-  // Handle click on assessment card - navigate to quiz editor if has quiz
-  const handleAssessmentClick = async (assessment) => {
-    const assessmentId = assessment.assessmentId || assessment.AssessmentId;
-    const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
-
-    if (!assessmentId) {
-      return;
-    }
-
-    // Check if assessment has a quiz
-    const typeInfo = assessmentTypes[assessmentId] || { hasQuiz: false, hasEssay: false };
-
-    if (typeInfo.hasQuiz) {
-      try {
-        const quizRes = await quizService.getTeacherQuizzesByAssessment(assessmentId);
-
-        if (quizRes.data?.success && quizRes.data?.data && quizRes.data.data.length > 0) {
-          const quiz = quizRes.data.data[0];
-          const quizId = quiz.quizId || quiz.QuizId;
-
-          if (quizId) {
-            // Navigate to quiz editor
-            navigate(ROUTE_PATHS.TEACHER_EDIT_QUIZ(courseId, lessonId, moduleId, assessmentId, quizId));
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching quiz:", error);
-      }
-    }
-  };
-
-  // Handle edit assessment - only for editing assessment title/details
-  const handleEditAssessment = (assessment) => {
-    // Backend returns AssessmentId (PascalCase)
-    const assessmentId = assessment.assessmentId || assessment.AssessmentId;
-    const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
-
-    if (!assessmentId) {
-      console.error("Assessment ID not found. Available keys:", Object.keys(assessment));
-      alert("Không tìm thấy ID của assessment. Vui lòng thử lại.");
-      return;
-    }
-
-    // Navigate to assessment edit page (for editing title/details)
-    navigate(ROUTE_PATHS.TEACHER_EDIT_ASSESSMENT(courseId, lessonId, moduleId, assessmentId));
-  };
 
   if (!isAuthenticated || !isTeacher) {
     return null;
@@ -403,7 +364,7 @@ export default function TeacherLessonDetail() {
                       Đang tải danh sách {(() => {
                         const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                         const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
-                        return contentTypeNum === 1 ? 'lectures' : contentTypeNum === 4 ? 'flashcards' : contentTypeNum === 3 ? 'assessments' : 'nội dung';
+                        return getModuleTypePath(contentTypeNum);
                       })()}...
                     </div>
                   ) : contentError ? (
@@ -416,7 +377,7 @@ export default function TeacherLessonDetail() {
                             const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                             const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
 
-                            if (contentTypeNum === 1) {
+                            if (isLecture(contentTypeNum)) {
                               // Lecture
                               const lectureId = item.lectureId || item.LectureId;
                               const lectureTitle = item.title || item.Title || `Lecture ${index + 1}`;
@@ -444,7 +405,7 @@ export default function TeacherLessonDetail() {
                                   </button>
                                 </div>
                               );
-                            } else if (contentTypeNum === 4) {
+                            } else if (isFlashCard(contentTypeNum)) {
                               // FlashCard - backend returns flashCardId (camelCase with capital C)
                               const flashcardId = item.flashCardId || item.flashcardId || item.FlashcardId || item.FlashCardId;
                               const word = item.word || item.Word || `Flashcard ${index + 1}`;
@@ -482,7 +443,7 @@ export default function TeacherLessonDetail() {
                                   </button>
                                 </div>
                               );
-                            } else if (contentTypeNum === 3) {
+                            } else if (isAssessment(contentTypeNum)) {
                               // Assessment - backend returns AssessmentId (PascalCase)
                               const assessmentId = item.assessmentId || item.AssessmentId;
                               const title = item.title || item.Title || `Assessment ${index + 1}`;
@@ -491,6 +452,7 @@ export default function TeacherLessonDetail() {
                               const totalPoints = item.totalPoints || item.TotalPoints || 0;
                               const passingScore = item.passingScore || item.PassingScore || 0;
                               const isPublished = item.isPublished || item.IsPublished || false;
+                              const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
 
                               // Get quiz/essay info
                               const typeInfo = assessmentTypes[assessmentId] || { hasQuiz: false, hasEssay: false };
@@ -499,8 +461,10 @@ export default function TeacherLessonDetail() {
                                 <div
                                   key={assessmentId || index}
                                   className="content-item"
-                                  style={{ cursor: typeInfo.hasQuiz ? 'pointer' : 'default' }}
-                                  onClick={() => typeInfo.hasQuiz && handleAssessmentClick(item)}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => {
+                                    navigate(ROUTE_PATHS.TEACHER_QUIZ_ESSAY_MANAGEMENT(courseId, lessonId, moduleId, assessmentId));
+                                  }}
                                 >
                                   <div className="content-item-info">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -568,9 +532,10 @@ export default function TeacherLessonDetail() {
                                     className="content-item-edit-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleEditAssessment(item);
+                                      setAssessmentToUpdate(item);
+                                      setShowUpdateAssessmentModal(true);
                                     }}
-                                    title="Sửa tiêu đề"
+                                    title="Sửa Assessment"
                                   >
                                     <FaEdit className="edit-icon" />
                                     Sửa
@@ -585,13 +550,14 @@ export default function TeacherLessonDetail() {
                             {(() => {
                               const contentTypeValue = selectedModule.contentType || selectedModule.ContentType;
                               const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
-                              return contentTypeNum === 1
-                                ? "Chưa có lecture nào trong module này"
-                                : contentTypeNum === 4
-                                  ? "Chưa có flashcard nào trong module này"
-                                  : contentTypeNum === 3
-                                    ? "Chưa có assessment nào trong module này"
-                                    : "Chưa có nội dung nào trong module này";
+                              if (isLecture(contentTypeNum)) {
+                                return "Chưa có lecture nào trong module này";
+                              } else if (isFlashCard(contentTypeNum)) {
+                                return "Chưa có flashcard nào trong module này";
+                              } else if (isAssessment(contentTypeNum)) {
+                                return "Chưa có assessment nào trong module này";
+                              }
+                              return "Chưa có nội dung nào trong module này";
                             })()}
                           </div>
                         )}
@@ -603,7 +569,7 @@ export default function TeacherLessonDetail() {
                         const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
                         const moduleId = selectedModule.moduleId || selectedModule.ModuleId;
 
-                        if (contentTypeNum === 1) {
+                        if (isLecture(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn lecture-btn"
@@ -615,7 +581,7 @@ export default function TeacherLessonDetail() {
                               Tạo Lecture
                             </button>
                           );
-                        } else if (contentTypeNum === 4) {
+                        } else if (isFlashCard(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn flashcard-btn"
@@ -627,16 +593,16 @@ export default function TeacherLessonDetail() {
                               Tạo Flashcard
                             </button>
                           );
-                        } else if (contentTypeNum === 3) {
+                        } else if (isAssessment(contentTypeNum)) {
                           return (
                             <button
                               className="module-create-btn assessment-btn"
                               onClick={() => {
-                                navigate(ROUTE_PATHS.TEACHER_CREATE_ASSESSMENT(courseId, lessonId, moduleId));
+                                setShowCreateAssessmentModal(true);
                               }}
                             >
                               <FaPlus className="add-icon" />
-                              Tạo Assessment
+                              Thêm Assessment
                             </button>
                           );
                         }
@@ -658,14 +624,11 @@ export default function TeacherLessonDetail() {
                       const contentTypeValue = module.contentType || module.ContentType;
                       const contentTypeName = module.contentTypeName || module.ContentTypeName;
 
-                      // Map enum number to name if needed
+                      // Map enum number to name if needed (matching backend ModuleType enum)
                       const contentTypeMap = {
                         1: "Lecture",
-                        2: "Quiz",
-                        3: "Assignment",
-                        4: "FlashCard",
-                        5: "Video",
-                        6: "Reading"
+                        2: "FlashCard",
+                        3: "Assessment"
                       };
 
                       const displayContentType = contentTypeName || contentTypeMap[contentTypeValue] || contentTypeValue || "Unknown";
@@ -679,17 +642,30 @@ export default function TeacherLessonDetail() {
 
                       const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
 
+                      // Handle module click - navigate to corresponding screen based on module type
+                      const handleModuleItemClick = () => {
+                        if (!isClickable(contentTypeNum)) return;
+                        
+                        const moduleIdValue = module.moduleId || module.ModuleId;
+                        
+                        if (isLecture(contentTypeNum)) {
+                          // Navigate to create lecture page
+                          navigate(ROUTE_PATHS.TEACHER_CREATE_LECTURE(courseId, lessonId, moduleIdValue));
+                        } else if (isFlashCard(contentTypeNum)) {
+                          // Navigate to create flashcard page
+                          navigate(ROUTE_PATHS.TEACHER_CREATE_FLASHCARD(courseId, lessonId, moduleIdValue));
+                        } else if (isAssessment(contentTypeNum)) {
+                          // For Assessment, show content list in current screen (existing behavior)
+                          handleModuleClick(module);
+                        }
+                      };
+
                       return (
                         <div
                           key={moduleId || index}
                           className="module-item"
-                          onClick={() => {
-                            if (contentTypeNum === 1 || contentTypeNum === 4 || contentTypeNum === 3) {
-                              // Lecture, FlashCard, or Assignment - show content list
-                              handleModuleClick(module);
-                            }
-                          }}
-                          style={{ cursor: (contentTypeNum === 1 || contentTypeNum === 4 || contentTypeNum === 3) ? 'pointer' : 'default' }}
+                          onClick={handleModuleItemClick}
+                          style={{ cursor: isClickable(contentTypeNum) ? 'pointer' : 'default' }}
                         >
                           <div className="module-item-content">
                             <img
@@ -814,6 +790,66 @@ export default function TeacherLessonDetail() {
         onClose={() => setShowUpdateModuleSuccessModal(false)}
         title="Cập nhật module thành công"
         message="Module của bạn đã được cập nhật thành công!"
+        autoClose={true}
+        autoCloseDelay={1500}
+      />
+
+      {/* Create Assessment Modal */}
+      {selectedModule && (
+        <CreateAssessmentModal
+          show={showCreateAssessmentModal}
+          onClose={() => setShowCreateAssessmentModal(false)}
+          onSuccess={() => {
+            setShowCreateAssessmentModal(false);
+            setShowCreateAssessmentSuccessModal(true);
+            // Reload assessments list
+            if (selectedModule) {
+              handleModuleClick(selectedModule);
+            }
+          }}
+          moduleId={selectedModule.moduleId || selectedModule.ModuleId}
+        />
+      )}
+
+      {/* Success Modal for Assessment Creation */}
+      <SuccessModal
+        isOpen={showCreateAssessmentSuccessModal}
+        onClose={() => setShowCreateAssessmentSuccessModal(false)}
+        title="Tạo Assessment thành công"
+        message="Assessment của bạn đã được tạo thành công!"
+        autoClose={true}
+        autoCloseDelay={1500}
+      />
+
+      {/* Update Assessment Modal */}
+      {selectedModule && assessmentToUpdate && (
+        <CreateAssessmentModal
+          show={showUpdateAssessmentModal}
+          onClose={() => {
+            setShowUpdateAssessmentModal(false);
+            setAssessmentToUpdate(null);
+          }}
+          onSuccess={() => {
+            setShowUpdateAssessmentModal(false);
+            setAssessmentToUpdate(null);
+            setShowUpdateAssessmentSuccessModal(true);
+            // Reload assessments list
+            if (selectedModule) {
+              handleModuleClick(selectedModule);
+            }
+          }}
+          moduleId={selectedModule.moduleId || selectedModule.ModuleId}
+          assessmentData={assessmentToUpdate}
+          isUpdateMode={true}
+        />
+      )}
+
+      {/* Success Modal for Assessment Update */}
+      <SuccessModal
+        isOpen={showUpdateAssessmentSuccessModal}
+        onClose={() => setShowUpdateAssessmentSuccessModal(false)}
+        title="Cập nhật Assessment thành công"
+        message="Assessment của bạn đã được cập nhật thành công!"
         autoClose={true}
         autoCloseDelay={1500}
       />

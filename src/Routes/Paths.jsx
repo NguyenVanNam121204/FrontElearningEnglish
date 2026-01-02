@@ -68,12 +68,10 @@ export const ROUTE_PATHS = {
   TEACHER_EDIT_LECTURE: (courseId, lessonId, moduleId, lectureId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/lecture/${lectureId}/edit`,
   TEACHER_CREATE_FLASHCARD: (courseId, lessonId, moduleId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/create-flashcard`,
   TEACHER_EDIT_FLASHCARD: (courseId, lessonId, moduleId, flashcardId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/edit-flashcard/${flashcardId}`,
-  TEACHER_CREATE_ASSESSMENT: (courseId, lessonId, moduleId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/create-assessment`,
-  TEACHER_EDIT_ASSESSMENT: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/edit-assessment/${assessmentId}`,
-  TEACHER_ASSESSMENT_TYPE_SELECTION: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/select-type`,
-  TEACHER_CREATE_ESSAY: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/create-essay`,
-  TEACHER_CREATE_QUIZ: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/create-quiz`,
-  TEACHER_EDIT_QUIZ: (courseId, lessonId, moduleId, assessmentId, quizId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/edit-quiz/${quizId}`,
+      TEACHER_QUIZ_ESSAY_MANAGEMENT: (courseId, lessonId, moduleId, assessmentId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/manage`,
+      TEACHER_QUIZ_SECTION_MANAGEMENT: (courseId, lessonId, moduleId, assessmentId, quizId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/quiz/${quizId}/sections`,
+      TEACHER_QUESTION_MANAGEMENT_SECTION: (courseId, lessonId, moduleId, assessmentId, quizId, sectionId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/quiz/${quizId}/section/${sectionId}/questions`,
+      TEACHER_QUESTION_MANAGEMENT_GROUP: (courseId, lessonId, moduleId, assessmentId, quizId, groupId) => `/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}/quiz/${quizId}/group/${groupId}/questions`,
 
   // Admin routes
   ADMIN: {

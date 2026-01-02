@@ -8,14 +8,12 @@ import "./CreateModuleModal.css";
 
 const MODULE_IMAGE_BUCKET = "modules"; // Bucket name for module images
 
-// ModuleType enum mapping
+// ModuleType enum mapping (matching backend ModuleType enum)
+// Lecture = 1, FlashCard = 2, Assessment = 3
 const MODULE_TYPES = [
   { value: 1, label: "Lecture" },
-  { value: 2, label: "Quiz" },
-  { value: 3, label: "Assignment" },
-  { value: 4, label: "FlashCard" },
-  { value: 5, label: "Video" },
-  { value: 6, label: "Reading" },
+  { value: 2, label: "FlashCard" },
+  { value: 3, label: "Assessment" },
 ];
 
 export default function CreateModuleModal({ show, onClose, onSuccess, lessonId, moduleData, isUpdateMode = false }) {

@@ -41,11 +41,9 @@ import TeacherStudentManagement from "../Pages/Teacher/TeacherStudentManagement"
 import TeacherModuleLectureDetail from "../Pages/Teacher/TeacherModuleLectureDetail/TeacherModuleLectureDetail";
 import EditLecture from "../Pages/Teacher/TeacherModuleLectureDetail/EditLecture";
 import TeacherModuleFlashCardDetail from "../Pages/Teacher/TeacherModuleFlashCardDetail/TeacherModuleFlashCardDetail";
-import TeacherModuleAssessmentDetail from "../Pages/Teacher/TeacherModuleAssessmentDetail/TeacherModuleAssessmentDetail";
-import TeacherAssessmentTypeSelection from "../Pages/Teacher/TeacherAssessmentTypeSelection/TeacherAssessmentTypeSelection";
-import TeacherModuleQuizDetail from "../Pages/Teacher/TeacherModuleQuizDetail/TeacherModuleQuizDetail";
-import TeacherModuleEssayDetail from "../Pages/Teacher/TeacherModuleEssayDetail/TeacherModuleEssayDetail";
-import TeacherQuizEditor from "../Pages/Teacher/TeacherQuizEditor/TeacherQuizEditor";
+import TeacherQuizEssayManagement from "../Pages/Teacher/TeacherQuizEssayManagement/TeacherQuizEssayManagement";
+import TeacherQuizSectionManagement from "../Pages/Teacher/TeacherQuizSectionManagement/TeacherQuizSectionManagement";
+import TeacherQuestionManagement from "../Pages/Teacher/TeacherQuestionManagement/TeacherQuestionManagement";
 
 // Admin Imports
 import AdminLayout from "../Layouts/AdminLayout/AdminLayout";
@@ -113,12 +111,10 @@ export default function AppRoutes() {
       <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/lecture/:lectureId/edit" element={<EditLecture />} />
       <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/create-flashcard" element={<TeacherModuleFlashCardDetail />} />
       <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/edit-flashcard/:flashcardId" element={<TeacherModuleFlashCardDetail />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/create-assessment" element={<TeacherModuleAssessmentDetail />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/edit-assessment/:assessmentId" element={<TeacherModuleAssessmentDetail />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/select-type" element={<TeacherAssessmentTypeSelection />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/create-essay" element={<TeacherModuleEssayDetail />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/create-quiz" element={<TeacherModuleQuizDetail />} />
-      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/edit-quiz/:quizId" element={<TeacherQuizEditor />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/manage" element={<TeacherQuizEssayManagement />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/quiz/:quizId/sections" element={<TeacherQuizSectionManagement />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/quiz/:quizId/section/:sectionId/questions" element={<TeacherQuestionManagement />} />
+      <Route path="/teacher/course/:courseId/lesson/:lessonId/module/:moduleId/assessment/:assessmentId/quiz/:quizId/group/:groupId/questions" element={<TeacherQuestionManagement />} />
       <Route path="/teacher/course/:courseId" element={<TeacherCourseDetail />} />
 
       {/* Admin routes */}
