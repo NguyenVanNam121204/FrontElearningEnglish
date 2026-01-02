@@ -44,7 +44,10 @@ export default function OrderingQuestion({ question, answer, onChange }) {
         if (orderedOptions && orderedOptions.length > 0) {
             const orderedIds = orderedOptions
                 .filter(opt => opt !== undefined && opt !== null)
-                .map(opt => opt.optionId || opt.OptionId || opt.answerOptionId || opt.AnswerOptionId);
+                .map(opt => {
+                    const id = opt.optionId || opt.OptionId || opt.answerOptionId || opt.AnswerOptionId;
+                    return Number(id); // Force Number for backend scoring
+                });
             
             // Only trigger onChange if we have valid IDs
             if (orderedIds.length > 0) {
