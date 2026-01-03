@@ -1,5 +1,6 @@
 import React from "react";
 import { MdClose, MdLocalFireDepartment, MdCardMembership, MdPerson, MdEmail, MdPhone, MdWc, MdCake, MdVerifiedUser } from "react-icons/md";
+import "./UserDetailModal.css";
 
 export default function UserDetailModal({ show, onClose, user }) {
   if (!show || !user) return null;

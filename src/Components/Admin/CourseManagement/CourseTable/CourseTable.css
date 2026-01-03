@@ -1,0 +1,187 @@
+.course-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.course-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.course-table thead {
+  background-color: #f8f9fa;
+}
+
+.course-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.course-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.course-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.course-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.course-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.course-thumbnail {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.course-thumbnail-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  flex-shrink: 0;
+}
+
+.course-details {
+  min-width: 0;
+}
+
+.course-title {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+.course-id {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-system {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.type-teacher {
+  background-color: #0dcaf0;
+  color: #212529;
+}
+
+.price-free {
+  color: #198754;
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.125rem;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-view {
+  color: #0d6efd;
+}
+
+.action-view:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.action-edit {
+  color: #6c757d;
+}
+
+.action-edit:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+}
+
+.action-delete {
+  color: #dc3545;
+}
+
+.action-delete:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+@media (max-width: 768px) {
+  .course-table {
+    font-size: 0.75rem;
+  }
+  
+  .course-table th,
+  .course-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .course-thumbnail,
+  .course-thumbnail-placeholder {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .course-title {
+    font-size: 0.875rem;
+    max-width: 150px;
+  }
+  
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+}

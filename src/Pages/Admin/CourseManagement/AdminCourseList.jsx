@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdAdd, MdFilterList, MdSearch, MdEdit, MdDelete, MdVisibility, MdMenuBook } from "react-icons/md";
+import { MdAdd } from "react-icons/md";
 import { adminService } from "../../../Services/adminService";
-import CourseFormModal from "./CourseFormModal";
+import CourseFilters from "../../../Components/Admin/CourseManagement/CourseFilters/CourseFilters";
+import CourseTable from "../../../Components/Admin/CourseManagement/CourseTable/CourseTable";
+import CourseFormModal from "../../../Components/Admin/CourseManagement/CourseFormModal/CourseFormModal";
+import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
+import "./AdminCourseList.css";
 
 export default function AdminCourseList() {
   const navigate = useNavigate();
@@ -15,6 +19,10 @@ export default function AdminCourseList() {
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+
+  // Success Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     fetchCourses();
@@ -74,182 +82,65 @@ export default function AdminCourseList() {
       }
   }
 
-  const handleFormSubmit = async (formData) => {
-    try {
-      if (editingCourse) {
-        // Update
-        await adminService.updateCourse(editingCourse.courseId, formData);
-        alert("Course updated successfully!");
-      } else {
-        // Create
-        await adminService.createCourse(formData);
-        alert("Course created successfully!");
-      }
-      setShowModal(false);
-      fetchCourses();
-    } catch (error) {
-      console.error("Error saving course", error);
-      alert("Failed to save course. Check inputs.");
-    }
+  const handleFormSubmit = (courseData) => {
+    // Modal đã đóng, chỉ cần refresh và hiện success
+    const message = editingCourse ? "Cập nhật khóa học thành công!" : "Tạo khóa học thành công!";
+    setSuccessMessage(message);
+    setShowSuccessModal(true);
+    fetchCourses();
   };
 
-  const handleSearch = (e) => {
-      if(e.key === 'Enter') {
-          fetchCourses();
-      }
-  }
-
-  const formatPrice = (price) => {
-      if (price === 0 || !price) return <span className="text-success fw-bold">Free</span>;
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-  };
-
-  const getTypeBadge = (type) => {
-      return type === 1 
-        ? <span className="badge bg-primary">System</span> 
-        : <span className="badge bg-info text-dark">Teacher</span>;
+  const handleViewCourse = (courseId) => {
+    navigate(`/admin/courses/${courseId}`);
   };
 
   return (
     <div className="course-management-container">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="page-title mb-1">Course Management</h1>
-          <p className="text-muted">Monitor and manage all system and teacher-created courses.</p>
+      {/* HEADER */}
+      <div className="page-header">
+        <div className="header-content">
+          <h1 className="page-title">Course Management</h1>
+          <p className="page-subtitle">Monitor and manage all system and teacher-created courses.</p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center" onClick={handleCreateClick}>
-          <MdAdd className="me-2"/> Create New Course
+        <button className="btn-create" onClick={handleCreateClick}>
+          <MdAdd /> Create New Course
         </button>
       </div>
 
-      {/* FILTERS CARD */}
-      <div className="admin-card mb-4 p-3">
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div className="btn-group">
-            <button 
-              className={`btn ${activeTab === 'all' ? 'btn-dark' : 'btn-outline-secondary'}`}
-              onClick={() => setActiveTab('all')}
-            >
-              All Courses
-            </button>
-            <button 
-              className={`btn ${activeTab === 'system' ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setActiveTab('system')}
-            >
-              System Courses
-            </button>
-            <button 
-              className={`btn ${activeTab === 'teacher' ? 'btn-info' : 'btn-outline-secondary'}`}
-              onClick={() => setActiveTab('teacher')}
-            >
-              Teacher Courses
-            </button>
-          </div>
+      {/* FILTERS */}
+      <CourseFilters 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onSearch={fetchCourses}
+      />
 
-          <div className="d-flex gap-2">
-            <div className="input-group" style={{maxWidth: '300px'}}>
-              <span className="input-group-text bg-white border-end-0"><MdSearch /></span>
-              <input 
-                type="text" 
-                className="form-control border-start-0 ps-0" 
-                placeholder="Search course..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleSearch}
-              />
-            </div>
-            <button className="btn btn-outline-secondary"><MdFilterList /></button>
-          </div>
-        </div>
-      </div>
+      {/* COURSE TABLE */}
+      <CourseTable 
+        courses={courses}
+        loading={loading}
+        onView={handleViewCourse}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteCourse}
+      />
 
-      {/* DATA TABLE */}
-      <div className="admin-card">
-        <div className="table-responsive">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th style={{width: '35%'}}>Course Name</th>
-                <th>Instructor</th>
-                <th>Type</th>
-                <th>Price</th>
-                <th>Students</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                  <tr><td colSpan="6" className="text-center p-4">Loading courses...</td></tr>
-              ) : courses.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center p-4">No courses found.</td></tr>
-              ) : (
-                  courses.map((course) => (
-                    <tr key={course.courseId}>
-                        <td>
-                        <div className="d-flex align-items-center">
-                            {course.imageUrl ? (
-                                <img 
-                                src={course.imageUrl} 
-                                alt="Course" 
-                                className="rounded me-3" 
-                                style={{width: '40px', height: '40px', objectFit: 'cover'}}
-                                />
-                            ) : (
-                                <div className="rounded me-3 d-flex align-items-center justify-content-center bg-light" style={{width: '40px', height: '40px'}}>
-                                    <MdMenuBook size={20} className="text-muted"/>
-                                </div>
-                            )}
-                            <div>
-                            <div className="fw-bold text-truncate" style={{maxWidth: '250px'}}>{course.title}</div>
-                            <small className="text-muted">ID: #CRS-{course.courseId}</small>
-                            </div>
-                        </div>
-                        </td>
-                        <td>
-                            <span className="small">{course.teacherName || "System Admin"}</span>
-                        </td>
-                        <td>{getTypeBadge(course.type)}</td>
-                        <td>{formatPrice(course.price)}</td>
-                        <td>{course.studentCount}</td>
-                        <td>
-                        <div className="d-flex gap-2">
-                            <button 
-                                className="btn btn-sm btn-light text-primary" 
-                                title="View Details"
-                                onClick={() => navigate(`/admin/courses/${course.courseId}`)}
-                            >
-                                <MdVisibility />
-                            </button>
-                            <button 
-                                className="btn btn-sm btn-light text-secondary" 
-                                title="Edit"
-                                onClick={() => handleEditClick(course)}
-                            >
-                                <MdEdit />
-                            </button>
-                            <button 
-                                className="btn btn-sm btn-light text-danger" 
-                                title="Delete"
-                                onClick={() => handleDeleteCourse(course.courseId)}
-                            >
-                                <MdDelete />
-                            </button>
-                        </div>
-                        </td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* CREATE/EDIT MODAL */}
+      {/* MODAL */}
       <CourseFormModal 
         show={showModal} 
         onClose={() => setShowModal(false)} 
         onSubmit={handleFormSubmit}
         initialData={editingCourse}
+      />
+
+      {/* SUCCESS MODAL */}
+      <SuccessModal 
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Thành công"
+        message={successMessage}
+        autoClose={true}
+        autoCloseDelay={3000}
       />
     </div>
   );
