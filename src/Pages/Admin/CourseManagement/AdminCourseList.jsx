@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdAdd } from "react-icons/md";
 import { adminService } from "../../../Services/adminService";
@@ -6,10 +6,13 @@ import CourseFilters from "../../../Components/Admin/CourseManagement/CourseFilt
 import CourseTable from "../../../Components/Admin/CourseManagement/CourseTable/CourseTable";
 import CourseFormModal from "../../../Components/Admin/CourseManagement/CourseFormModal/CourseFormModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
+import UnauthorizedModal from "../../../Components/Common/UnauthorizedModal/UnauthorizedModal";
+import { usePermission } from "../../../hooks/usePermission";
 import "./AdminCourseList.css";
 
 export default function AdminCourseList() {
   const navigate = useNavigate();
+  const { checkPermission, showUnauthorizedModal, unauthorizedFeature, closeUnauthorizedModal } = usePermission();
   const [activeTab, setActiveTab] = useState("all");
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +27,7 @@ export default function AdminCourseList() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
-    fetchCourses();
-  }, [activeTab, pagination.pageNumber, searchTerm]); 
-
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -56,30 +55,40 @@ export default function AdminCourseList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, pagination.pageNumber, pagination.pageSize, searchTerm]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleCreateClick = () => {
-    setEditingCourse(null);
-    setShowModal(true);
+    checkPermission("course_create", () => {
+      setEditingCourse(null);
+      setShowModal(true);
+    });
   };
 
   const handleEditClick = (course) => {
-    setEditingCourse(course);
-    setShowModal(true);
+    checkPermission("course_edit", () => {
+      setEditingCourse(course);
+      setShowModal(true);
+    });
   };
 
   const handleDeleteCourse = async (courseId) => {
-      if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
-      try {
-          const response = await adminService.deleteCourse(courseId);
-          if (response.data.success) {
-              alert("Course deleted successfully");
-              fetchCourses();
-          }
-      } catch (error) {
-          console.error(error);
-          alert("Failed to delete course");
-      }
+      checkPermission("course_delete", async () => {
+        if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+        try {
+            const response = await adminService.deleteCourse(courseId);
+            if (response.data.success) {
+                alert("Course deleted successfully");
+                fetchCourses();
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to delete course");
+        }
+      });
   }
 
   const handleFormSubmit = (courseData) => {
@@ -152,6 +161,13 @@ export default function AdminCourseList() {
         message={successMessage}
         autoClose={true}
         autoCloseDelay={1500}
+      />
+
+      {/* UNAUTHORIZED MODAL */}
+      <UnauthorizedModal 
+        show={showUnauthorizedModal}
+        onClose={closeUnauthorizedModal}
+        feature={unauthorizedFeature}
       />
     </div>
   );

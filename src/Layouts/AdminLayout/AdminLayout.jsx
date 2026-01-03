@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../Routes/Paths";
+import UnauthorizedModal from "../../Components/Common/UnauthorizedModal/UnauthorizedModal";
+import { hasAnyRole } from "../../Utils/permissions";
 import "./AdminLayout.css";
 
 // Icons (Using React Icons)
@@ -19,14 +21,17 @@ import { useAuth } from "../../Context/AuthContext";
 export default function AdminLayout() {
   const { user, roles, isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Unauthorized Modal State
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
+  const [unauthorizedFeature, setUnauthorizedFeature] = useState("");
 
   // Check if user is admin
   const isAdmin = roles.some((role) => {
     const roleName = typeof role === 'string' ? role : role?.name || role;
     return roleName === "SuperAdmin" || 
            roleName === "ContentAdmin" || 
-           roleName === "FinanceAdmin" ||
-           roleName === "Admin";
+           roleName === "FinanceAdmin";
   });
 
   useEffect(() => {
@@ -56,6 +61,15 @@ export default function AdminLayout() {
     logout(navigate);
   };
 
+  // Kiểm tra quyền trước khi navigate
+  const handleNavClick = (e, path, requiredRoles, featureName) => {
+    if (requiredRoles && !hasAnyRole(roles, requiredRoles)) {
+      e.preventDefault();
+      setUnauthorizedFeature(featureName);
+      setShowUnauthorizedModal(true);
+    }
+  };
+
   // Show loading or nothing while checking auth
   if (loading || !isAuthenticated || !isAdmin) {
     return null;
@@ -80,6 +94,7 @@ export default function AdminLayout() {
           <NavLink 
             to={ROUTE_PATHS.ADMIN.COURSES} 
             className={({ isActive }) => isActive ? "menu-item active" : "menu-item"}
+            onClick={(e) => handleNavClick(e, ROUTE_PATHS.ADMIN.COURSES, ["SuperAdmin", "ContentAdmin"], "Quản lý khóa học")}
           >
             <MdClass /> Course Management
           </NavLink>
@@ -87,6 +102,7 @@ export default function AdminLayout() {
           <NavLink 
             to={ROUTE_PATHS.ADMIN.USERS} 
             className={({ isActive }) => isActive ? "menu-item active" : "menu-item"}
+            onClick={(e) => handleNavClick(e, ROUTE_PATHS.ADMIN.USERS, ["SuperAdmin", "FinanceAdmin"], "Quản lý người dùng")}
           >
             <MdPeople /> User Management
           </NavLink>
@@ -94,6 +110,7 @@ export default function AdminLayout() {
           <NavLink 
             to={ROUTE_PATHS.ADMIN.FINANCE} 
             className={({ isActive }) => isActive ? "menu-item active" : "menu-item"}
+            onClick={(e) => handleNavClick(e, ROUTE_PATHS.ADMIN.FINANCE, ["SuperAdmin", "FinanceAdmin"], "Quản lý tài chính")}
           >
             <MdAttachMoney /> Finance
           </NavLink>
@@ -101,6 +118,7 @@ export default function AdminLayout() {
           <NavLink 
             to={ROUTE_PATHS.ADMIN.SUBMISSION_MANAGEMENT} 
             className={({ isActive }) => isActive ? "menu-item active" : "menu-item"}
+            onClick={(e) => handleNavClick(e, ROUTE_PATHS.ADMIN.SUBMISSION_MANAGEMENT, ["SuperAdmin", "ContentAdmin"], "Quản lý bài nộp")}
           >
             <MdAssignment /> Quản lý bài nộp
           </NavLink>
@@ -139,6 +157,13 @@ export default function AdminLayout() {
         </header>
 
         {/* DYNAMIC CONTENT */}
+
+      {/* UNAUTHORIZED MODAL */}
+      <UnauthorizedModal 
+        show={showUnauthorizedModal}
+        onClose={() => setShowUnauthorizedModal(false)}
+        feature={unauthorizedFeature}
+      />
         <div className="admin-content">
           <Outlet />
         </div>
