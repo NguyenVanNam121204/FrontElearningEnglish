@@ -3,7 +3,7 @@ import "./Register.css";
 import Header from "../../Components/Header/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../Services/authService";
-import { InputField, DatePicker, SelectField } from "../../Components/Auth";
+import { InputField, DatePicker } from "../../Components/Auth";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -232,12 +232,6 @@ export default function Register() {
     }
   };
 
-  // Gender options
-  const genderOptions = [
-    { value: "male", label: "Nam" },
-    { value: "female", label: "Nữ" },
-  ];
-
   return (
     <div className="auth-container">
       <Header />
@@ -325,31 +319,49 @@ export default function Register() {
             disabled={loading}
           />
 
-          {/* Date of Birth and Gender Row */}
-          <div className="form-row date-gender-row">
-            <div className="date-picker-wrapper">
-              <DatePicker
-                value={formData.dateOfBirth}
-                onChange={handleDateChange}
-                disabled={loading}
-                hasError={!!errors.dateOfBirth}
-              />
-              {errors.dateOfBirth && (
-                <span className="input-field-error">{errors.dateOfBirth}</span>
-              )}
-            </div>
+          {/* Date of Birth */}
+          <div className="date-picker-wrapper">
+            <DatePicker
+              value={formData.dateOfBirth}
+              onChange={handleDateChange}
+              disabled={loading}
+              hasError={!!errors.dateOfBirth}
+            />
+            {errors.dateOfBirth && (
+              <span className="input-field-error">{errors.dateOfBirth}</span>
+            )}
+          </div>
 
-            <div className="gender-wrapper">
-              <SelectField
-                name="gender"
-                value={formData.gender}
-                onChange={handleGenderChange}
-                options={genderOptions}
-                placeholder="Giới tính"
-                error={errors.gender}
-                disabled={loading}
-              />
+          {/* Gender Radio Buttons */}
+          <div className="gender-radio-wrapper">
+            <div className="gender-radio-label">Giới tính</div>
+            <div className="gender-radio-group">
+              <label className="gender-radio-option">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="female"
+                  checked={formData.gender === "female"}
+                  onChange={handleGenderChange}
+                  disabled={loading}
+                />
+                <span className="radio-label">Nữ</span>
+              </label>
+              <label className="gender-radio-option">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="male"
+                  checked={formData.gender === "male"}
+                  onChange={handleGenderChange}
+                  disabled={loading}
+                />
+                <span className="radio-label">Nam</span>
+              </label>
             </div>
+            {errors.gender && (
+              <span className="input-field-error">{errors.gender}</span>
+            )}
           </div>
 
           {/* Submit Button */}
