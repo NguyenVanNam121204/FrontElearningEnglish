@@ -4,6 +4,7 @@ import { FaPlus } from "react-icons/fa";
 import PackageList from "../../../Components/Admin/PackageManagement/PackageList";
 import PackageFormModal from "../../../Components/Admin/PackageManagement/PackageFormModal";
 import ConfirmModal from "../../../Components/Common/ConfirmModal/ConfirmModal";
+import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
 import { teacherPackageService } from "../../../Services/teacherPackageService";
 import { toast } from "react-toastify";
 // import "./PackageManagement.css"; // Create CSS if needed
@@ -15,6 +16,8 @@ export default function PackageManagement() {
     const [packageToEdit, setPackageToEdit] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [packageToDelete, setPackageToDelete] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     useEffect(() => {
         fetchPackages();
@@ -47,6 +50,14 @@ export default function PackageManagement() {
         setShowFormModal(true);
     };
 
+    const handleFormSuccess = (message) => {
+        fetchPackages();
+        if (message) {
+            setSuccessMessage(message);
+            setShowSuccessModal(true);
+        }
+    };
+
     const handleDeleteClick = (pkg) => {
         setPackageToDelete(pkg);
         setShowDeleteModal(true);
@@ -58,7 +69,8 @@ export default function PackageManagement() {
             const id = packageToDelete.teacherPackageId || packageToDelete.TeacherPackageId;
             const response = await teacherPackageService.delete(id);
             if (response.data?.success) {
-                toast.success("Xóa gói dịch vụ thành công!");
+                setSuccessMessage("Xóa gói dịch vụ thành công!");
+                setShowSuccessModal(true);
                 fetchPackages();
             } else {
                 toast.error(response.data?.message || "Không thể xóa gói dịch vụ.");
@@ -106,7 +118,7 @@ export default function PackageManagement() {
             <PackageFormModal
                 show={showFormModal}
                 onClose={() => setShowFormModal(false)}
-                onSuccess={fetchPackages}
+                onSuccess={handleFormSuccess}
                 packageToEdit={packageToEdit}
             />
 
@@ -119,6 +131,13 @@ export default function PackageManagement() {
                 confirmText="Xóa"
                 cancelText="Hủy"
                 type="delete"
+            />
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                title="Thành công"
+                message={successMessage}
             />
         </Container>
     );

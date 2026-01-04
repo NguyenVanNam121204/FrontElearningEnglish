@@ -25,7 +25,6 @@ export default function PackageList({ packages, onEdit, onDelete }) {
                         <th className="py-3 border-0">Tên gói</th>
                         <th className="py-3 border-0">Cấp độ</th>
                         <th className="py-3 border-0">Giá</th>
-                        <th className="py-3 border-0">Thời hạn</th>
                         <th className="py-3 border-0">Giới hạn (C/L/S)</th>
                         <th className="py-3 border-0 rounded-end text-center">Hành động</th>
                     </tr>
@@ -38,7 +37,6 @@ export default function PackageList({ packages, onEdit, onDelete }) {
                                 <td className="fw-medium text-primary">{pkg.packageName || pkg.PackageName}</td>
                                 <td>{getLevelBadge(pkg.level !== undefined ? pkg.level : pkg.Level)}</td>
                                 <td className="fw-bold text-success">{formatPrice(pkg.price || pkg.Price)}</td>
-                                <td>{pkg.durationMonths || pkg.DurationMonths} tháng</td>
                                 <td>
                                     <div className="d-flex gap-2">
                                         <Badge bg="light" text="dark" className="border" title="Max Courses">
@@ -78,7 +76,7 @@ export default function PackageList({ packages, onEdit, onDelete }) {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="7" className="text-center py-5 text-muted">
+                            <td colSpan="6" className="text-center py-5 text-muted">
                                 <div className="d-flex flex-column align-items-center">
                                     <i className="fa fa-box-open fa-3x mb-3 opacity-50"></i>
                                     <p>Chưa có gói dịch vụ nào.</p>

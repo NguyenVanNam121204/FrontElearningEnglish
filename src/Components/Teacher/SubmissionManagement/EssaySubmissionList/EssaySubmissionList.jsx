@@ -44,7 +44,10 @@ export default function EssaySubmissionList({ essayId, essayTitle, onBack, isAdm
 
   const handleViewDetail = async (submission) => {
     try {
-      const response = await essaySubmissionService.getSubmissionDetail(submission.submissionId || submission.SubmissionId);
+      const submissionId = submission.submissionId || submission.SubmissionId;
+      const response = isAdmin
+        ? await essaySubmissionService.getAdminSubmissionDetail(submissionId)
+        : await essaySubmissionService.getSubmissionDetail(submissionId);
       if (response.data?.success) {
         setSelectedSubmission(response.data.data);
         setShowDetailModal(true);
@@ -62,7 +65,9 @@ export default function EssaySubmissionList({ essayId, essayTitle, onBack, isAdm
         (s) => (s.submissionId || s.SubmissionId) === submissionId
       );
       
-      const response = await essaySubmissionService.downloadSubmissionFile(submissionId);
+      const response = isAdmin
+        ? await essaySubmissionService.downloadAdminSubmissionFile(submissionId)
+        : await essaySubmissionService.downloadSubmissionFile(submissionId);
       
       // Get filename from Content-Disposition header or use attachmentType
       let fileName = `submission-${submissionId}`;
@@ -315,6 +320,7 @@ export default function EssaySubmissionList({ essayId, essayTitle, onBack, isAdm
             setSelectedSubmission(null);
           }}
           submission={selectedSubmission}
+          isAdmin={isAdmin}
           onGradeSuccess={() => {
             fetchSubmissions();
             setShowDetailModal(false);
