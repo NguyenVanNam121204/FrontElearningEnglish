@@ -42,7 +42,9 @@ export default function QuizAttemptList({ quizId, quizTitle, onBack, isAdmin = f
   const handleViewDetail = async (attempt) => {
     try {
       const attemptId = attempt.attemptId || attempt.AttemptId;
-      const response = await quizAttemptService.getAttemptDetailForReview(attemptId);
+      const response = isAdmin
+        ? await quizAttemptService.getAdminAttemptDetailForReview(attemptId)
+        : await quizAttemptService.getAttemptDetailForReview(attemptId);
       if (response.data?.success) {
         setSelectedAttempt(response.data.data);
         setShowDetailModal(true);
