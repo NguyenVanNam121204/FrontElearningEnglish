@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Pagination } from "react-bootstrap";
 import "./AdminStudentManagement.css";
@@ -12,7 +12,7 @@ import { FaPlus, FaUser } from "react-icons/fa";
 export default function AdminStudentManagement() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user, roles, isAuthenticated } = useAuth();
+  const { roles, isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,17 +34,7 @@ export default function AdminStudentManagement() {
 
   const isAdmin = roles.includes("SuperAdmin") || roles.includes("ContentAdmin") || roles.includes("FinanceAdmin");
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) {
-      navigate("/home");
-      return;
-    }
-
-    fetchCourseDetail();
-    fetchStudents();
-  }, [isAuthenticated, isAdmin, navigate, courseId, currentPage, searchTerm]);
-
-  const fetchCourseDetail = async () => {
+  const fetchCourseDetail = useCallback(async () => {
     try {
       const response = await adminService.getCourseContent(courseId);
       if (response.data?.success && response.data?.data) {
@@ -53,9 +43,9 @@ export default function AdminStudentManagement() {
     } catch (err) {
       console.error("Error fetching course detail:", err);
     }
-  };
+  }, [courseId]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -86,7 +76,17 @@ export default function AdminStudentManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, currentPage, pageSize, searchTerm]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) {
+      navigate("/home");
+      return;
+    }
+
+    fetchCourseDetail();
+    fetchStudents();
+  }, [isAuthenticated, isAdmin, navigate, fetchCourseDetail, fetchStudents]);
 
   const handleStudentClick = async (studentId) => {
     try {
@@ -283,6 +283,7 @@ export default function AdminStudentManagement() {
         onClose={() => setShowStudentDetailModal(false)}
         student={selectedStudent}
         courseId={courseId}
+        onStudentRemoved={fetchStudents}
         isAdmin={true}
       />
 

@@ -45,10 +45,10 @@ export default function AdminCourseList() {
       const response = await adminService.getAllCourses(params);
       if (response.data && response.data.success) {
         setCourses(response.data.data.items || []);
-        setPagination({
-            ...pagination,
+        setPagination(prev => ({
+            ...prev,
             totalCount: response.data.data.totalCount
-        });
+        }));
       }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
