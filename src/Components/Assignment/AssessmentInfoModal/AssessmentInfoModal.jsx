@@ -21,6 +21,7 @@ export default function AssessmentInfoModal({
     const [error, setError] = useState("");
     const [inProgressAttempt, setInProgressAttempt] = useState(null);
     const [checkingProgress, setCheckingProgress] = useState(false);
+    const [showCannotStartModal, setShowCannotStartModal] = useState(false);
 
     useEffect(() => {
         if (isOpen && assessment) {
@@ -212,6 +213,13 @@ export default function AssessmentInfoModal({
             try {
                 setLoading(true);
                 
+                // If user requested to start a NEW attempt but there is an active attempt, show card instead
+                if (isNewAttempt && inProgressAttempt && inProgressAttempt.attemptId) {
+                    setShowCannotStartModal(true);
+                    setLoading(false);
+                    return;
+                }
+
                 // Nếu không phải attempt mới và có in-progress attempt, dùng nó
                 if (!isNewAttempt && inProgressAttempt && inProgressAttempt.attemptId) {
                     console.log("▶️ [AssessmentInfoModal] Continuing in-progress attempt:", inProgressAttempt.attemptId);
@@ -241,12 +249,19 @@ export default function AssessmentInfoModal({
                     });
                     onClose();
                 } else {
-                    setError(response.data?.message || "Không thể bắt đầu làm quiz");
+                    // If backend rejects starting a new attempt, prefer showing the cannot-start modal
+                    setShowCannotStartModal(true);
                     setLoading(false);
                 }
             } catch (err) {
                 console.error("❌ [AssessmentInfoModal] Error starting quiz:", err);
-                setError(err.response?.data?.message || "Không thể bắt đầu làm quiz");
+                // If backend returns an active-attempt error, show the card; otherwise show generic error
+                const msg = err.response?.data?.message || "Không thể bắt đầu làm quiz";
+                if (msg && /active|already|đang làm|đã có/i.test(msg)) {
+                    setShowCannotStartModal(true);
+                } else {
+                    setError(msg);
+                }
                 setLoading(false);
             }
         } else if (essay) {
@@ -473,6 +488,19 @@ export default function AssessmentInfoModal({
                     </>
                 )}
             </div>
+            {/* Centered modal shown when user tries to start a new quiz but has an active attempt */}
+            {showCannotStartModal && (
+                <div className="cannot-start-modal-overlay" onClick={() => setShowCannotStartModal(false)}>
+                    <div className="cannot-start-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h4>Bạn không thể bắt đầu bài quiz mới</h4>
+                        <p className="text-muted">Bạn đang có một bài quiz chưa hoàn thành. Vui lòng tiếp tục bài đang làm hoặc nộp bài trước khi bắt đầu bài mới.</p>
+                        <div className="d-flex gap-2 mt-3 justify-content-end">
+                            <Button variant="outline-secondary" onClick={() => setShowCannotStartModal(false)}>Đóng</Button>
+                            <Button variant="primary" onClick={() => { setShowCannotStartModal(false); handleStart(false); }}>Tiếp tục bài đang làm</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
