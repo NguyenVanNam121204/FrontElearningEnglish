@@ -274,10 +274,11 @@ export default function CreateAssessmentModal({
               }}
               min={now}
               max={dueAt || null}
-              placeholder="dd/mm/yyyy HH:mm"
+              placeholder="dd/mm/yyyy"
               hasError={!!errors.openAt}
               label="Thời gian mở"
               required={true}
+              dateOnly={true}
             />
             {errors.openAt && <div className="invalid-feedback" style={{ marginTop: "4px" }}>{errors.openAt}</div>}
             <div className="form-hint">*Bắt buộc</div>
@@ -292,10 +293,11 @@ export default function CreateAssessmentModal({
                 setErrors({ ...errors, dueAt: null });
               }}
               min={openAt || now}
-              placeholder="dd/mm/yyyy HH:mm"
+              placeholder="dd/mm/yyyy"
               hasError={!!errors.dueAt}
               label="Thời gian đóng"
               required={true}
+              dateOnly={true}
             />
             {errors.dueAt && <div className="invalid-feedback" style={{ marginTop: "4px" }}>{errors.dueAt}</div>}
             <div className="form-hint">*Bắt buộc (phải sau thời gian mở)</div>

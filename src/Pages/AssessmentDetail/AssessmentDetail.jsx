@@ -11,6 +11,7 @@ import { assessmentService } from "../../Services/assessmentService";
 import { courseService } from "../../Services/courseService";
 import { lessonService } from "../../Services/lessonService";
 import { quizAttemptService } from "../../Services/quizAttemptService";
+import { essaySubmissionService } from "../../Services/essaySubmissionService";
 import { essayService } from "../../Services/essayService";
 import { quizService } from "../../Services/quizService";
 import "./AssessmentDetail.css";
@@ -36,6 +37,7 @@ export default function AssessmentDetail() {
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [notification, setNotification] = useState({ isOpen: false, type: "info", message: "" });
     const [inProgressQuizzes, setInProgressQuizzes] = useState({});
+    const [essaySubmissionsMap, setEssaySubmissionsMap] = useState({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -68,6 +70,25 @@ export default function AssessmentDetail() {
 
                 if (essayRes.data?.success) {
                     setEssays(Array.isArray(essayRes.data.data) ? essayRes.data.data : [essayRes.data.data]);
+                }
+
+                // Check submission status for each essay for current user so we can show "Cập nhật Essay" label
+                try {
+                    const essayList = Array.isArray(essayRes.data?.data) ? essayRes.data.data : (essayRes.data?.data ? [essayRes.data.data] : []);
+                    const submissionMap = {};
+                    await Promise.all(essayList.map(async (es) => {
+                        try {
+                            const res = await (await import('../../Services/essaySubmissionService')).essaySubmissionService.getSubmissionStatus(es.essayId || es.EssayId);
+                            if (res?.data?.success && res.data?.data) {
+                                submissionMap[es.essayId || es.EssayId] = res.data.data.submissionId || res.data.data.SubmissionId || true;
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }));
+                    setEssaySubmissionsMap(submissionMap);
+                } catch (e) {
+                    // ignore
                 }
 
             } catch (err) {
@@ -147,7 +168,21 @@ export default function AssessmentDetail() {
         navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/quiz/${data.quizId}/attempt/${data.attemptId || 'new'}`);
     };
 
-    const handleStartEssay = (data) => {
+    const handleStartEssay = async (data) => {
+        // Before navigating, try to get existing submission data so EssayDetail can prefill immediately
+        try {
+            const essayId = data.essayId || data.EssayId;
+            const statusResp = await essaySubmissionService.getSubmissionStatus(essayId);
+            // Backend returns full submission object in data (not just submissionId)
+            const submission = statusResp?.data?.data;
+            if (submission && (submission.submissionId || submission.SubmissionId)) {
+                navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/essay/${essayId}`, { state: { submission } });
+                return;
+            }
+        } catch (e) {
+            // ignore and navigate without submission
+        }
+
         navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/essay/${data.essayId}`);
     };
 
@@ -194,6 +229,7 @@ export default function AssessmentDetail() {
                                         key={e.essayId} 
                                         assessment={e} 
                                         onClick={() => handleEssayClick(e)}
+                                        hasSubmission={!!essaySubmissionsMap[e.essayId || e.EssayId]}
                                     />
                                 ))
                             ) : (

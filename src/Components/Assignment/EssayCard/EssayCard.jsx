@@ -4,7 +4,7 @@ import { FaEdit } from "react-icons/fa";
 import { Card, Button, Row, Col } from "react-bootstrap";
 import "./EssayCard.css";
 
-export default function EssayCard({ assessment, onClick }) {
+export default function EssayCard({ assessment, onClick, hasSubmission }) {
     const formatTimeLimit = (timeLimit) => {
         if (!timeLimit) return "Không giới hạn";
         const parts = timeLimit.split(":");
@@ -58,7 +58,7 @@ export default function EssayCard({ assessment, onClick }) {
                             }}
                         >
                             <FaEdit className="me-2" />
-                            Bắt đầu Viết Essay
+                            {hasSubmission ? 'Cập nhật Essay' : 'Bắt đầu Viết Essay'}
                         </Button>
                     </Col>
                 </Row>

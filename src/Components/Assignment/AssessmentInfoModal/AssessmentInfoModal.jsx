@@ -4,6 +4,7 @@ import { FaQuestionCircle, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaList
 import { useSubmissionStatus } from "../../../hooks/useSubmissionStatus";
 import { quizAttemptService } from "../../../Services/quizAttemptService";
 import { essayService } from "../../../Services/essayService";
+import { essaySubmissionService } from "../../../Services/essaySubmissionService";
 import { quizService } from "../../../Services/quizService";
 import "./AssessmentInfoModal.css";
 
@@ -21,6 +22,7 @@ export default function AssessmentInfoModal({
     const [error, setError] = useState("");
     const [inProgressAttempt, setInProgressAttempt] = useState(null);
     const [checkingProgress, setCheckingProgress] = useState(false);
+    const [essayHasSubmission, setEssayHasSubmission] = useState(false);
     const [showCannotStartModal, setShowCannotStartModal] = useState(false);
 
     useEffect(() => {
@@ -85,6 +87,17 @@ export default function AssessmentInfoModal({
 
                         if (targetEssay) {
                             setEssay(targetEssay);
+                            // Check if user already submitted this essay
+                            try {
+                                const statusResp = await essaySubmissionService.getSubmissionStatus(targetEssay.essayId || targetEssay.EssayId);
+                                if (statusResp?.data?.success && statusResp.data?.data) {
+                                    setEssayHasSubmission(true);
+                                } else {
+                                    setEssayHasSubmission(false);
+                                }
+                            } catch (e) {
+                                setEssayHasSubmission(false);
+                            }
                         } else {
                             setError("Không tìm thấy thông tin essay");
                         }
@@ -474,7 +487,7 @@ export default function AssessmentInfoModal({
                                     onClick={() => handleStart(true)}
                                     disabled={loading || checkingProgress || (!quiz && !essay)}
                                 >
-                                    {loading || checkingProgress ? "Đang tải..." : (isQuiz ? "Bắt đầu làm bài mới" : "Bắt đầu viết Essay")}
+                                    {loading || checkingProgress ? "Đang tải..." : (isQuiz ? "Bắt đầu làm bài mới" : (essayHasSubmission ? "Cập nhật Essay" : "Bắt đầu viết Essay"))}
                                 </Button>
                                 <Button
                                     variant="outline-secondary"

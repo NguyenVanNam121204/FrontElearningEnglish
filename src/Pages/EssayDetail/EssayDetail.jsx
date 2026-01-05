@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
@@ -10,14 +11,17 @@ import { fileService } from "../../Services/fileService";
 import { moduleService } from "../../Services/moduleService";
 import { courseService } from "../../Services/courseService";
 import { lessonService } from "../../Services/lessonService";
+import { assessmentService } from "../../Services/assessmentService";
 import { FaFileUpload, FaTimes, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaVolumeUp } from "react-icons/fa";
 import "./EssayDetail.css";
 
 export default function EssayDetail() {
     const { courseId, lessonId, moduleId, essayId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [essay, setEssay] = useState(null);
+    const [assessment, setAssessment] = useState(null);
     const [course, setCourse] = useState(null);
     const [lesson, setLesson] = useState(null);
     const [module, setModule] = useState(null);
@@ -89,40 +93,53 @@ export default function EssayDetail() {
                     if (essayResponse.data?.success && essayResponse.data?.data) {
                         setEssay(essayResponse.data.data);
 
+                        // Fetch assessment info to get DueAt
+                        const essayData = essayResponse.data.data;
+                        const assessmentId = essayData.assessmentId || essayData.AssessmentId;
+                        if (assessmentId) {
+                            try {
+                                const assessmentResponse = await assessmentService.getById(assessmentId);
+                                if (assessmentResponse.data?.success && assessmentResponse.data?.data) {
+                                    setAssessment(assessmentResponse.data.data);
+                                    console.log("✅ [EssayDetail] Loaded assessment info:", assessmentResponse.data.data);
+                                }
+                            } catch (err) {
+                                console.log("⚠️ [EssayDetail] Could not load assessment info:", err);
+                            }
+                        }
+
                         // Check if user has already submitted this essay
-                        try {
-                            const statusResponse = await essaySubmissionService.getSubmissionStatus(essayId);
-                            if (statusResponse?.data?.success && statusResponse?.data?.data) {
-                                const submissionData = statusResponse.data.data;
-                                const submissionId = submissionData?.submissionId || submissionData?.SubmissionId;
-
-                                if (submissionId) {
-                                    // Fetch full submission details
-                                    const submissionResponse = await essaySubmissionService.getById(submissionId);
-                                    if (submissionResponse?.data?.success && submissionResponse?.data?.data) {
-                                        const submission = submissionResponse.data.data;
-                                        if (submission) {
-                                            setCurrentSubmission(submission);
-
-                                            // Load submission data into form
-                                            const content = submission?.textContent || submission?.TextContent || "";
-                                            setTextContent(content);
-
-                                            // Load attachment if exists
-                                            const attachmentUrl = submission?.attachmentUrl || submission?.AttachmentUrl;
-                                            if (attachmentUrl) {
-                                                setExistingAttachmentUrl(attachmentUrl);
+                                try {
+                                    // If navigation provided full submission in state, use it directly (faster, reliable)
+                                    const submissionFromState = location?.state?.submission;
+                                    if (submissionFromState) {
+                                        setCurrentSubmission(submissionFromState);
+                                        const content = submissionFromState?.textContent || submissionFromState?.TextContent || "";
+                                        setTextContent(content);
+                                        const attachmentUrl = submissionFromState?.attachmentUrl || submissionFromState?.AttachmentUrl;
+                                        if (attachmentUrl) setExistingAttachmentUrl(attachmentUrl);
+                                        console.log("✅ [EssayDetail] Loaded submission from navigation state:", submissionFromState);
+                                    } else {
+                                        // Fallback: call status API which returns full submission object in data
+                                        const statusResponse = await essaySubmissionService.getSubmissionStatus(essayId);
+                                        if (statusResponse?.data?.success && statusResponse?.data?.data) {
+                                            const submission = statusResponse.data.data;
+                                            // Backend returns full submission object (textContent, attachmentUrl, etc.) directly
+                                            if (submission && (submission.submissionId || submission.SubmissionId)) {
+                                                setCurrentSubmission(submission);
+                                                const content = submission?.textContent || submission?.TextContent || "";
+                                                setTextContent(content);
+                                                const attachmentUrl = submission?.attachmentUrl || submission?.AttachmentUrl;
+                                                if (attachmentUrl) {
+                                                    setExistingAttachmentUrl(attachmentUrl);
+                                                }
+                                                console.log("✅ [EssayDetail] Loaded existing submission from status API:", submission);
                                             }
-
-                                            console.log("✅ [EssayDetail] Loaded existing submission:", submission);
                                         }
                                     }
+                                } catch (statusErr) {
+                                    console.log("ℹ️ [EssayDetail] No existing submission found or error:", statusErr);
                                 }
-                            }
-                        } catch (statusErr) {
-                            // If no submission exists, that's fine - user hasn't submitted yet
-                            console.log("ℹ️ [EssayDetail] No existing submission found:", statusErr);
-                        }
                     } else {
                         setError(essayResponse.data?.message || "Không thể tải thông tin essay");
                     }
@@ -448,7 +465,7 @@ export default function EssayDetail() {
                 console.log("📤 [EssayDetail] Updating submission...");
                 console.log("📝 [EssayDetail] Update data (PascalCase):", updateData);
 
-                const updateResponse = await essaySubmissionService.update(submissionId, updateData);
+                const updateResponse = await essaySubmissionService.updateSubmission(submissionId, updateData);
                 console.log("📥 [EssayDetail] Update response:", updateResponse.data);
 
                 if (updateResponse.data?.success) {
@@ -459,7 +476,7 @@ export default function EssayDetail() {
                     });
 
                     // Reload submission data
-                    const submissionResponse = await essaySubmissionService.getById(submissionId);
+                    const submissionResponse = await essaySubmissionService.getSubmissionById(submissionId);
                     if (submissionResponse.data?.success && submissionResponse.data?.data) {
                         setCurrentSubmission(submissionResponse.data.data);
                         setExistingAttachmentUrl(submissionResponse.data.data.attachmentUrl || submissionResponse.data.data.AttachmentUrl);
@@ -583,7 +600,7 @@ export default function EssayDetail() {
 
             console.log("🗑️ [EssayDetail] Deleting submission:", submissionId);
 
-            const deleteResponse = await essaySubmissionService.delete(submissionId);
+            const deleteResponse = await essaySubmissionService.deleteSubmission(submissionId);
             console.log("📥 [EssayDetail] Delete response:", deleteResponse.data);
 
             if (deleteResponse.data?.success) {
@@ -646,6 +663,22 @@ export default function EssayDetail() {
 
     const handleBackClick = () => {
         navigate(`/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assignment`);
+    };
+
+    const isPastDue = () => {
+        if (!assessment) {
+            return false;
+        }
+        const dueDate = assessment?.dueAt || assessment?.DueAt;
+        if (!dueDate) {
+            return false;
+        }
+        
+        const due = new Date(dueDate);
+        const now = new Date();
+        const isPast = now > due;
+        
+        return isPast;
     };
 
     if (loading) {
@@ -880,44 +913,51 @@ export default function EssayDetail() {
                                         </div>
                                     </Form.Group>
 
-                                    <div className="essay-submit-section d-flex gap-2">
-                                        <Button
-                                            variant="primary"
-                                            size="lg"
-                                            className="submit-essay-btn"
-                                            onClick={() => setShowSubmitModal(true)}
-                                            disabled={(submitting || isUpdating) || !textContent.trim()}
-                                            style={{
-                                                backgroundColor: '#41d6e3',
-                                                borderColor: '#41d6e3',
-                                                color: '#fff'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (!submitting && !isUpdating && textContent.trim()) {
-                                                    e.target.style.backgroundColor = '#35b8c4';
-                                                    e.target.style.borderColor = '#35b8c4';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!submitting && !isUpdating && textContent.trim()) {
-                                                    e.target.style.backgroundColor = '#41d6e3';
-                                                    e.target.style.borderColor = '#41d6e3';
-                                                }
-                                            }}
-                                        >
-                                            {isUpdating ? "Đang cập nhật..." : submitting ? "Đang nộp bài..." : currentSubmission ? "Cập nhật bài" : "Nộp bài"}
-                                        </Button>
-                                        {currentSubmission && (
+                                    {!isPastDue() ? (
+                                        <div className="essay-submit-section d-flex gap-2">
                                             <Button
-                                                variant="outline-danger"
+                                                variant="primary"
                                                 size="lg"
-                                                onClick={() => setShowDeleteModal(true)}
-                                                disabled={isDeleting}
+                                                className="submit-essay-btn"
+                                                onClick={() => setShowSubmitModal(true)}
+                                                disabled={(submitting || isUpdating) || !textContent.trim()}
+                                                style={{
+                                                    backgroundColor: '#41d6e3',
+                                                    borderColor: '#41d6e3',
+                                                    color: '#fff'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!submitting && !isUpdating && textContent.trim()) {
+                                                        e.target.style.backgroundColor = '#35b8c4';
+                                                        e.target.style.borderColor = '#35b8c4';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!submitting && !isUpdating && textContent.trim()) {
+                                                        e.target.style.backgroundColor = '#41d6e3';
+                                                        e.target.style.borderColor = '#41d6e3';
+                                                    }
+                                                }}
                                             >
-                                                {isDeleting ? "Đang xóa..." : "Xóa bài"}
+                                                {isUpdating ? "Đang cập nhật..." : submitting ? "Đang nộp bài..." : currentSubmission ? "Cập nhật bài" : "Nộp bài"}
                                             </Button>
-                                        )}
-                                    </div>
+                                            {currentSubmission && (
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="lg"
+                                                    onClick={() => setShowDeleteModal(true)}
+                                                    disabled={isDeleting}
+                                                >
+                                                    {isDeleting ? "Đang xóa..." : "Xóa bài"}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="alert alert-warning mt-3" role="alert">
+                                            <FaTimesCircle className="me-2" />
+                                            Đã quá hạn nộp bài. Bạn không thể nộp hoặc cập nhật bài essay này.
+                                        </div>
+                                    )}
                                 </Form>
                             </div>
                         </Col>
@@ -931,10 +971,25 @@ export default function EssayDetail() {
                                     <div className="info-content">
                                         <div className="info-label">Hạn nộp</div>
                                         <div className="info-value">
-                                            {essay?.assessment?.dueAt
-                                                ? formatDate(essay?.assessment?.dueAt)
+                                            {assessment?.dueAt || assessment?.DueAt
+                                                ? formatDate(assessment?.dueAt || assessment?.DueAt)
                                                 : "Không có hạn nộp"}
                                         </div>
+                                        {assessment?.dueAt || assessment?.DueAt ? (
+                                            <div className="info-value" style={{ marginTop: "4px", fontSize: "0.85em" }}>
+                                                {isPastDue() ? (
+                                                    <span className="text-danger">
+                                                        <FaTimesCircle className="me-1" />
+                                                        Đã quá hạn
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-success">
+                                                        <FaCheckCircle className="me-1" />
+                                                        Còn hạn nộp
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : null}
                                     </div>
                                 </div>
 
