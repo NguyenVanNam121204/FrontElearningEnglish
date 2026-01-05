@@ -115,17 +115,20 @@ export default function AssessmentInfoModal({
             const response = await quizAttemptService.checkActiveAttempt(quizId);
             console.log("📥 [AssessmentInfoModal] CheckActive API Response:", response.data);
 
-            if (response.data?.success && response.data?.data) {
+            // Only treat as in-progress when backend explicitly reports hasActiveAttempt === true
+            if (response.data?.success && response.data?.data && response.data.data.hasActiveAttempt) {
                 const activeAttempt = response.data.data;
                 const status = activeAttempt.Status !== undefined ? activeAttempt.Status : activeAttempt.status;
-                
+
                 console.log("✅ [AssessmentInfoModal] Active attempt found in DB:", activeAttempt);
-                
-                // If backend returns an active attempt, we show the Continue button
+
                 setInProgressAttempt({
                     attemptId: activeAttempt.attemptId || activeAttempt.AttemptId,
                     quizId: activeAttempt.quizId || activeAttempt.QuizId || quizId,
-                    status: status
+                    status: status,
+                    startedAt: activeAttempt.startedAt || activeAttempt.StartedAt || null,
+                    endTime: activeAttempt.endTime || activeAttempt.EndTime || null,
+                    timeRemainingSeconds: activeAttempt.timeRemainingSeconds ?? activeAttempt.TimeRemainingSeconds ?? null
                 });
             } else {
                 console.log("ℹ️ [AssessmentInfoModal] No active attempt found for this user/quiz.");
@@ -440,16 +443,16 @@ export default function AssessmentInfoModal({
 
                         <div className="assessment-info-footer">
                             <div className="footer-buttons-vertical">
-                                {isQuiz && (
-                                    <Button
-                                        variant="outline-primary"
-                                        className="assessment-continue-btn w-100 mb-2"
-                                        onClick={() => handleStart(false)}
-                                        disabled={loading || checkingProgress || !inProgressAttempt}
-                                    >
-                                        {loading || checkingProgress ? "Đang tải..." : "Tiếp tục bài đang làm"}
-                                    </Button>
-                                )}
+                                {isQuiz && inProgressAttempt && (
+                                        <Button
+                                            variant="outline-primary"
+                                            className="assessment-continue-btn w-100 mb-2"
+                                            onClick={() => handleStart(false)}
+                                            disabled={loading || checkingProgress}
+                                        >
+                                            {loading || checkingProgress ? "Đang tải..." : "Tiếp tục bài đang làm"}
+                                        </Button>
+                                    )}
                                 <Button
                                     variant="primary"
                                     className={`assessment-start-btn ${isQuiz ? "btn-quiz" : "btn-essay"} w-100`}
