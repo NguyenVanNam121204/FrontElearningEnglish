@@ -379,13 +379,6 @@ export default function TeacherLessonDetail() {
                 // Module Content View (Lectures/Flashcards List)
                 <div className="modules-section">
                   <div className="module-content-header">
-                    <button
-                      className="back-to-modules-btn"
-                      onClick={handleBackToModules}
-                    >
-                      <FaArrowLeft className="back-icon" />
-                      Quay lại
-                    </button>
                     <h3 className="module-content-title">
                       {selectedModule.name || selectedModule.Name || "Module"}
                     </h3>

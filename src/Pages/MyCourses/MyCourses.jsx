@@ -29,6 +29,7 @@ export default function MyCourses() {
     const [pageSize] = useState(20); // Hiển thị 20 courses mỗi trang (4 columns x 5 rows)
     const [totalCount, setTotalCount] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger để refresh danh sách
     
     const [notification, setNotification] = useState({
         isOpen: false,
@@ -106,7 +107,7 @@ export default function MyCourses() {
             setEnrolledCourses([]);
             setLoading(false);
         }
-    }, [currentPage, pageSize, isAuthenticated]);
+    }, [currentPage, pageSize, isAuthenticated, refreshTrigger]); // Thêm refreshTrigger vào dependencies
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -117,76 +118,39 @@ export default function MyCourses() {
         try {
             const response = await enrollmentService.joinByClassCode({ classCode });
 
-            // Function to find course by classCode and navigate
-            const findAndNavigateToCourse = async () => {
-                try {
-                    // Search all system courses to find one with matching classCode
-                    const systemCoursesResponse = await courseService.getSystemCourses();
-                    if (systemCoursesResponse.data?.success && systemCoursesResponse.data?.data) {
-                        const allSystemCourses = systemCoursesResponse.data.data;
-                        const foundCourse = allSystemCourses.find(c => c.classCode === classCode);
-                        if (foundCourse) {
-                            // Navigate to course detail
-                            navigate(`/course/${foundCourse.courseId}`);
-                            return true;
-                        }
-                    }
-                    return false;
-                } catch (err) {
-                    console.error("Error finding course:", err);
-                    return false;
-                }
-            };
-
             if (response.data?.success) {
                 // Join thành công
                 setIsModalOpen(false);
-                setNotification({
-                    isOpen: true,
-                    type: "success",
-                    message: "Đã join khóa học thành công!"
-                });
-
-                // Find and navigate to course
-                const found = await findAndNavigateToCourse();
-                if (!found) {
-                    // Fallback: get my courses and navigate to latest
-                    try {
-                        const myCoursesResponse = await enrollmentService.getMyCourses();
-                        if (myCoursesResponse.data?.success && myCoursesResponse.data?.data?.length > 0) {
-                            const myCourses = myCoursesResponse.data.data;
-                            const latestCourse = myCourses[myCourses.length - 1];
-                            navigate(`/course/${latestCourse.courseId}`);
-                        }
-                    } catch (err) {
-                        console.error("Error getting my courses:", err);
-                    }
+                
+                // Refresh courses list ngay lập tức
+                setRefreshTrigger(prev => prev + 1);
+                
+                // Reset về page 1 để thấy khóa học mới
+                if (currentPage !== 1) {
+                    setCurrentPage(1);
                 }
 
-                // Refresh courses list - reset to page 1
-                setCurrentPage(1);
+                // Hiển thị thông báo thành công sau khi danh sách đã cập nhật
+                setTimeout(() => {
+                    setNotification({
+                        isOpen: true,
+                        type: "success",
+                        message: "Đã tham gia lớp học thành công! Khóa học đã được thêm vào danh sách của bạn."
+                    });
+                }, 300);
             } else {
                 // Join thất bại - kiểm tra xem có phải "đã đăng ký rồi" không
                 const errorMessage = response.data?.message || "";
                 const isAlreadyEnrolled = errorMessage.includes("đã đăng ký") || errorMessage.includes("đã tham gia");
 
                 if (isAlreadyEnrolled) {
-                    // Nếu đã đăng ký rồi, vẫn tìm course và navigate
+                    // Nếu đã đăng ký rồi, chỉ thông báo
                     setIsModalOpen(false);
                     setNotification({
                         isOpen: true,
                         type: "info",
-                        message: "Bạn đã tham gia khóa học này rồi!"
+                        message: "Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới."
                     });
-
-                    const found = await findAndNavigateToCourse();
-                    if (!found) {
-                        setNotification({
-                            isOpen: true,
-                            type: "error",
-                            message: "Không tìm thấy khóa học. Vui lòng thử lại."
-                        });
-                    }
                 } else {
                     // Các lỗi khác
                     setNotification({
@@ -208,22 +172,8 @@ export default function MyCourses() {
                 setNotification({
                     isOpen: true,
                     type: "info",
-                    message: "Bạn đã tham gia khóa học này rồi!"
+                    message: "Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới."
                 });
-
-                // Vẫn tìm course và navigate
-                try {
-                    const systemCoursesResponse = await courseService.getSystemCourses();
-                    if (systemCoursesResponse.data?.success && systemCoursesResponse.data?.data) {
-                        const allSystemCourses = systemCoursesResponse.data.data;
-                        const foundCourse = allSystemCourses.find(c => c.classCode === classCode);
-                        if (foundCourse) {
-                            navigate(`/course/${foundCourse.courseId}`);
-                        }
-                    }
-                } catch (err) {
-                    console.error("Error finding course:", err);
-                }
             } else {
                 setNotification({
                     isOpen: true,

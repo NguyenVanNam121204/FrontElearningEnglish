@@ -169,9 +169,6 @@ export default function AdminCourseDetail() {
   return (
     <div className="admin-course-detail-container">
       <div className="breadcrumb-section">
-        <button className="back-btn" onClick={() => navigate("/admin/courses")}>
-          <FaArrowLeft /> Quay lại
-        </button>
         <span className="breadcrumb-text">
           <span className="breadcrumb-link" onClick={() => navigate("/admin/courses")}>
             Quản lý khóa học

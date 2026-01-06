@@ -115,14 +115,9 @@ export default function AdminModuleLectureDetail() {
     <div className="admin-module-lecture-detail-container">
       <Container>
         <div className="d-flex align-items-center justify-content-between mb-4 mt-4">
-          <div className="d-flex align-items-center">
-              <Button variant="outline-secondary" className="me-3" onClick={() => navigate(`/admin/courses/${courseId}/lesson/${lessonId}`)}>
-                  <FaArrowLeft /> Quay lại
-              </Button>
-              <div>
-                  <h2 className="mb-0 fw-bold text-primary">Quản lý bài giảng</h2>
-                  <div className="text-muted">{module?.name || "Module"}</div>
-              </div>
+          <div>
+              <h2 className="mb-0 fw-bold text-primary">Quản lý bài giảng</h2>
+              <div className="text-muted">{module?.name || "Module"}</div>
           </div>
           <Button variant="primary" onClick={() => { setLectureToUpdate(null); setShowCreateModal(true); }}>
               <FaPlus className="me-2" /> Tạo Lecture mới

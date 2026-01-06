@@ -112,14 +112,9 @@ export default function TeacherModuleFlashCardDetail() {
       <div className="teacher-module-flashcard-detail-container">
         <Container>
           <div className="d-flex align-items-center justify-content-between mb-4 mt-4">
-            <div className="d-flex align-items-center">
-                <Button variant="outline-secondary" className="me-3" onClick={() => navigate(ROUTE_PATHS.TEACHER_LESSON_DETAIL(courseId, lessonId))}>
-                    <FaArrowLeft /> Quay lại
-                </Button>
-                <div>
-                    <h2 className="mb-0 fw-bold text-primary">Quản lý từ vựng</h2>
-                    <div className="text-muted">{module?.name || "Module"} ({flashcards.length} từ)</div>
-                </div>
+            <div>
+                <h2 className="mb-0 fw-bold text-primary">Quản lý từ vựng</h2>
+                <div className="text-muted">{module?.name || "Module"} ({flashcards.length} từ)</div>
             </div>
             <Button variant="primary" onClick={() => { setFlashcardToUpdate(null); setShowCreateModal(true); }}>
                 <FaPlus className="me-2" /> Thêm Flashcard

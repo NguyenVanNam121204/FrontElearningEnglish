@@ -172,12 +172,6 @@ export default function AdminQuizSectionManagement() {
       <Container>
         {/* Header */}
         <div className="mb-4">
-          <button 
-            className="btn btn-outline-secondary mb-3"
-            onClick={() => navigate(`/admin/courses/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}`)}
-          >
-            ← Quay lại
-          </button>
           <h1 className="mb-0 fw-bold text-primary">Quản lý Quiz: {quizTitle}</h1>
         </div>
 
