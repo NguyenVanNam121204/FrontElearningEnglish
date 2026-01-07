@@ -67,7 +67,19 @@ export default function QuizDetail() {
                     } else if (type === "Group") {
                         const groupQuestions = item.Questions || item.questions || [];
                         if (Array.isArray(groupQuestions)) {
-                            allQuestions.push(...groupQuestions);
+                            // Attach group info to each question in the group
+                            const groupInfo = {
+                                groupName: item.Name || item.name,
+                                groupImgUrl: item.ImgUrl || item.imgUrl,
+                                groupVideoUrl: item.VideoUrl || item.videoUrl
+                            };
+                            
+                            groupQuestions.forEach(q => {
+                                allQuestions.push({
+                                    ...q,
+                                    _groupInfo: groupInfo // Add group info as metadata
+                                });
+                            });
                         }
                     }
                 });
@@ -86,7 +98,19 @@ export default function QuizDetail() {
                     groups.forEach((group) => {
                         const groupQuestions = group.Questions || group.questions || [];
                         if (Array.isArray(groupQuestions) && groupQuestions.length > 0) {
-                            allQuestions.push(...groupQuestions);
+                            // Attach group info to legacy structure as well
+                            const groupInfo = {
+                                groupName: group.Name || group.name,
+                                groupImgUrl: group.ImgUrl || group.imgUrl,
+                                groupVideoUrl: group.VideoUrl || group.videoUrl
+                            };
+                            
+                            groupQuestions.forEach(q => {
+                                allQuestions.push({
+                                    ...q,
+                                    _groupInfo: groupInfo
+                                });
+                            });
                         }
                     });
                 }

@@ -366,13 +366,33 @@ export default function TeacherQuestionManagement() {
                         <div key={group.quizGroupId} className="mb-5 group-container">
                             {/* Group Header Bar */}
                             <div className="group-header-bar bg-light border rounded p-3 mb-3 d-flex justify-content-between align-items-center shadow-sm" style={{borderLeft: '5px solid #0d6efd'}}>
-                                <div>
-                                    <div className="d-flex align-items-center gap-2">
+                                <div className="flex-grow-1 me-3">
+                                    <div className="d-flex align-items-center gap-2 mb-2">
                                         <FaLayerGroup className="text-primary"/>
-                                        <h5 className="mb-0 fw-bold text-primary">{group.name}</h5>
                                         <Badge bg="secondary">Total: {group.sumScore} pts</Badge>
                                     </div>
-                                    <div className="text-muted small mt-1">{group.title}</div>
+                                    <div className="text-primary fw-bold" style={{
+                                        fontSize: '0.95rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: '2',
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        lineHeight: '1.4'
+                                    }} title={group.name}>
+                                        {group.name}
+                                    </div>
+                                    {group.title && (
+                                        <div className="text-muted small mt-1" style={{
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: '1',
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }} title={group.title}>
+                                            {group.title}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="d-flex gap-2">
                                     <Button variant="outline-primary" size="sm" onClick={() => handleAddQuestion(group)}>

@@ -85,6 +85,9 @@ export default function QuestionCard({ question, answer, onChange, questionNumbe
         );
     }
 
+    // Extract group info if available
+    const groupInfo = question._groupInfo;
+
     return (
         <Card className="question-card">
             <Card.Body>
@@ -98,6 +101,38 @@ export default function QuestionCard({ question, answer, onChange, questionNumbe
                         </Badge>
                     </Col>
                 </Row>
+                
+                {/* Display Group Information if available */}
+                {groupInfo && (groupInfo.groupName || groupInfo.groupImgUrl || groupInfo.groupVideoUrl) && (
+                    <div className="question-group-info mb-3">
+                        {groupInfo.groupName && (
+                            <div className="group-name mb-2">
+                                <strong>{groupInfo.groupName}</strong>
+                            </div>
+                        )}
+                        {groupInfo.groupImgUrl && (
+                            <div className="group-media mb-2">
+                                <img 
+                                    src={groupInfo.groupImgUrl} 
+                                    alt="Group context" 
+                                    className="media-element group-img" 
+                                    style={{ maxWidth: '100%', height: 'auto' }}
+                                />
+                            </div>
+                        )}
+                        {groupInfo.groupVideoUrl && (
+                            <div className="group-media mb-2">
+                                <video 
+                                    src={groupInfo.groupVideoUrl} 
+                                    controls 
+                                    className="media-element group-video"
+                                    style={{ maxWidth: '100%', height: 'auto' }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+                
                 <div className="question-content">
                     {questionType !== 4 && (
                         <div className="question-text">
